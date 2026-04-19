@@ -33,8 +33,8 @@
 ;; make-org-mem-entry and mock only the list-returning function.
 
 (ert-deftest org-node-ui--all-nodes/maps-to-id-title-alists ()
-  (let ((e1 (make-org-mem-entry :id "id1" :title "Alpha"))
-        (e2 (make-org-mem-entry :id "id2" :title "Beta")))
+  (let ((e1 (make-org-mem-entry :id "id1" :title-maybe "Alpha"))
+        (e2 (make-org-mem-entry :id "id2" :title-maybe "Beta")))
     (cl-letf (((symbol-function 'org-node-all-filtered-nodes)
                (lambda () (list e1 e2))))
       (let ((result (org-node-ui--all-nodes)))
@@ -72,8 +72,8 @@
 ;;;; org-node-ui--backlinks
 
 (ert-deftest org-node-ui--backlinks/returns-source-id-and-title ()
-  (let ((entry1 (make-org-mem-entry :id "src1" :title "Title:src1"))
-        (entry2 (make-org-mem-entry :id "src2" :title "Title:src2"))
+  (let ((entry1 (make-org-mem-entry :id "src1" :title-maybe "Title:src1"))
+        (entry2 (make-org-mem-entry :id "src2" :title-maybe "Title:src2"))
         (link1  (make-org-mem-link :nearby-id "src1"))
         (link2  (make-org-mem-link :nearby-id "src2")))
     (cl-letf (((symbol-function 'org-mem-id-links-to-id)
@@ -90,7 +90,7 @@
         (should (string= "src1"       (alist-get 'source (nth 1 result))))))))
 
 (ert-deftest org-node-ui--backlinks/skips-links-whose-source-entry-is-missing ()
-  (let ((real-entry (make-org-mem-entry :id "real" :title "Real Node"))
+  (let ((real-entry (make-org-mem-entry :id "real" :title-maybe "Real Node"))
         (ghost-link (make-org-mem-link :nearby-id "ghost"))
         (real-link  (make-org-mem-link :nearby-id "real")))
     (cl-letf (((symbol-function 'org-mem-id-links-to-id)
@@ -105,16 +105,18 @@
 ;;;; org-node-ui--entry-raw
 
 (ert-deftest org-node-ui--entry-raw/returns-cached-text-when-available ()
-  (let ((entry (make-org-mem-entry :text "* Cached\n"))
+  (let ((entry (make-org-mem-entry))
         (org-mem-do-cache-text t))
-    (should (string= "* Cached\n" (org-node-ui--entry-raw entry)))))
+    (cl-letf (((symbol-function 'org-mem-entry-text)
+               (lambda (_e) "* Cached\n")))
+      (should (string= "* Cached\n" (org-node-ui--entry-raw entry))))))
 
 (ert-deftest org-node-ui--entry-raw/reads-file-when-cache-disabled ()
   (let ((tmpfile (make-temp-file "org-node-ui-test-" nil ".org")))
     (unwind-protect
         (progn
           (with-temp-file tmpfile (insert "* From file\n"))
-          (let ((entry (make-org-mem-entry :file tmpfile))
+          (let ((entry (make-org-mem-entry :file-truename tmpfile))
                 (org-mem-do-cache-text nil))
             (should (string= "* From file\n"
                              (org-node-ui--entry-raw entry)))))
