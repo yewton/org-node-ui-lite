@@ -42,6 +42,7 @@ describe("useGraphManager Hook", () => {
 		nodeSize: 10,
 		labelScale: 1,
 		showLabels: true,
+		chargeStrength: -120,
 	};
 
 	beforeEach(async () => {

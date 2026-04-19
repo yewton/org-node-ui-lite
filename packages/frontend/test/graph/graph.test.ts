@@ -76,6 +76,7 @@ describe("Graph Module", () => {
 				10,
 				1,
 				true,
+				-120,
 			);
 
 			expect(mockGET).toHaveBeenCalledWith("api/graph.json");
@@ -100,6 +101,7 @@ describe("Graph Module", () => {
 				10,
 				1,
 				true,
+				-120,
 			);
 		});
 
@@ -114,7 +116,7 @@ describe("Graph Module", () => {
 			const mockContainer = document.createElement("div");
 
 			await expect(
-				drawGraph("cytoscape", "cose", mockContainer, undefined, 10, 1, true),
+				drawGraph("cytoscape", "cose", mockContainer, undefined, 10, 1, true, -120),
 			).rejects.toThrow("API error: Network error");
 		});
 	});
@@ -144,6 +146,7 @@ describe("Graph Module", () => {
 				15,
 				1.2,
 				false,
+				-120,
 			);
 
 			expect(mockCytoscapeRenderer).toHaveBeenCalled();
@@ -162,6 +165,7 @@ describe("Graph Module", () => {
 				20,
 				0.8,
 				true,
+				-120,
 			);
 
 			expect(mockForceGraphRenderer).toHaveBeenCalled();
@@ -180,6 +184,7 @@ describe("Graph Module", () => {
 				25,
 				1.5,
 				true,
+				-120,
 			);
 
 			expect(mock3DForceGraphRenderer).toHaveBeenCalled();
@@ -201,6 +206,7 @@ describe("Graph Module", () => {
 				10,
 				1,
 				true,
+				-120,
 			);
 
 			expect(mockCytoscapeRenderer).toHaveBeenCalledWith(
@@ -212,6 +218,7 @@ describe("Graph Module", () => {
 				10,
 				1,
 				true,
+				-120,
 			);
 		});
 	});
