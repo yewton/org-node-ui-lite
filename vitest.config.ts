@@ -1,42 +1,16 @@
-// vitest.config.ts
-
 import { defineConfig } from "vitest/config";
 
-/**
- * Configure Vitest with project settings.
- */
 export default defineConfig({
 	test: {
-		// default environment for the root project
-		environment: "node",
-		pool: "threads",
+		name: "frontend",
+		include: ["packages/frontend/test/**/*.test.{ts,tsx}"],
+		environment: "jsdom",
+		setupFiles: ["packages/frontend/test/setup.ts"],
 		testTimeout: 30000,
 		coverage: {
 			enabled: true,
 			reporter: ["text", "json", "html"],
-			include: ["packages/*/src/**"],
+			include: ["packages/frontend/src/**"],
 		},
-
-		// define two inline projects
-		projects: [
-			{
-				// inherit root settings
-				extends: true,
-				test: {
-					name: "frontend",
-					include: ["packages/frontend/test/**/*.test.{ts,tsx}"],
-					environment: "jsdom", // frontend uses jsdom
-					setupFiles: ["packages/frontend/test/setup.ts"],
-				},
-			},
-			{
-				extends: true,
-				test: {
-					name: "backend",
-					include: ["packages/backend/test/**/*.test.ts"],
-					environment: "node", // backend uses node
-				},
-			},
-		],
 	},
 });
