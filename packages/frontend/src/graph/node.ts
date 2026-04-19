@@ -4,7 +4,7 @@ import type { components, paths } from "../api/api.d.ts";
 import { createOrgHtmlProcessor } from "../utils/processor.ts";
 import type { Theme } from "./graph-types.ts"; // Corrected import path
 
-const api = createClient<paths>({ baseUrl: "./" });
+const api = createClient<paths>({ baseUrl: "/" });
 
 /**
  * Fetch a single node and convert its Org content to HTML.
