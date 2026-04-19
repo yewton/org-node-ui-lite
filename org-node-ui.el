@@ -223,25 +223,25 @@ and the build output is shown."
     (message "org-node-ui: %s front-end (this may take a minute)…"
              (if has-modules "Building" "Installing dependencies and building"))
     (setq org-node-ui--build-process
-          (make-process
-           :name "org-node-ui-build"
-           :buffer buf
-           :noquery t
-           :command (list shell-file-name shell-command-switch sh-cmd)
-           :default-directory repo-root
-           :sentinel
-           (lambda (_proc event)
-             (setq org-node-ui--build-process nil)
-             (if (string-match-p "finished" event)
-                 (progn
-                   (message "org-node-ui: Build complete.")
-                   ;; Only start if the user hasn't disabled the mode meanwhile.
-                   (when org-node-ui-mode
-                     (org-node-ui--start-server)))
-               (setq org-node-ui-mode nil)
-               (display-buffer (get-buffer "*org-node-ui-build*"))
-               (message (concat "org-node-ui: Build failed — "
-                                "see buffer *org-node-ui-build*"))))))))
+          (let ((default-directory repo-root))
+            (make-process
+             :name "org-node-ui-build"
+             :buffer buf
+             :noquery t
+             :command (list shell-file-name shell-command-switch sh-cmd)
+             :sentinel
+             (lambda (_proc event)
+               (setq org-node-ui--build-process nil)
+               (if (string-match-p "finished" event)
+                   (progn
+                     (message "org-node-ui: Build complete.")
+                     ;; Only start if the user hasn't disabled the mode meanwhile.
+                     (when org-node-ui-mode
+                       (org-node-ui--start-server)))
+                 (setq org-node-ui-mode nil)
+                 (display-buffer (get-buffer "*org-node-ui-build*"))
+                 (message (concat "org-node-ui: Build failed — "
+                                  "see buffer *org-node-ui-build*")))))))
 
 ;;;; Minor mode
 
