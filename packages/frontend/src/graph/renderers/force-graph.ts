@@ -31,6 +31,7 @@ const renderForceGraph: RendererFunction = (
 	nodeSize: number,
 	labelScale: number,
 	showLabels: boolean,
+	chargeStrength: number,
 ): GraphInstance => {
 	const radius = nodeSize / 2;
 	const area = Math.PI * radius * radius;
@@ -45,6 +46,7 @@ const renderForceGraph: RendererFunction = (
 		.nodeRelSize(1)
 		.linkColor("color")
 		.linkWidth(2)
+		.d3Force("charge", fg.d3Force("charge")?.strength(chargeStrength) ?? null)
 		.graphData({ nodes: fgNodes, links: edges });
 
 	if (showLabels) {

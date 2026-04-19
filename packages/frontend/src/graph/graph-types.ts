@@ -56,4 +56,5 @@ export type RendererFunction = (
 	nodeSize: number,
 	labelScale: number,
 	showLabels: boolean,
+	chargeStrength: number,
 ) => GraphInstance;

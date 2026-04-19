@@ -21,12 +21,14 @@ interface SettingsPanelProps {
 	nodeSize: number;
 	labelScale: number;
 	showLabels: boolean;
+	chargeStrength: number;
 	onThemeChange: (theme: Theme) => void;
 	onRendererChange: (renderer: Renderer) => void;
 	onLayoutChange: (layout: Layout) => void;
 	onNodeSizeChange: (size: number) => void;
 	onLabelScaleChange: (scale: number) => void;
 	onShowLabelsChange: (show: boolean) => void;
+	onChargeStrengthChange: (strength: number) => void;
 	onClose: () => void;
 }
 
@@ -41,12 +43,14 @@ export function SettingsPanel({
 	nodeSize,
 	labelScale,
 	showLabels,
+	chargeStrength,
 	onThemeChange,
 	onRendererChange,
 	onLayoutChange,
 	onNodeSizeChange,
 	onLabelScaleChange,
 	onShowLabelsChange,
+	onChargeStrengthChange,
 	onClose,
 }: SettingsPanelProps) {
 	const panelId = useId();
@@ -125,6 +129,17 @@ export function SettingsPanel({
 							label="Display labels"
 						/>
 					</FormGroup>
+				</When>
+
+				<When condition={renderer !== "cytoscape"}>
+					<RangeSlider
+						label="Repulsion"
+						value={-chargeStrength}
+						min={30}
+						max={500}
+						step={10}
+						onChange={(v) => onChargeStrengthChange(-v)}
+					/>
 				</When>
 			</div>
 		</div>

@@ -31,6 +31,7 @@ const renderCytoscape: RendererFunction = (
 	nodeSize: number,
 	labelScale: number,
 	showLabels: boolean,
+	_chargeStrength: number,
 ): GraphInstance => {
 	const elements = [
 		...nodes.map((n) => ({ data: n })),

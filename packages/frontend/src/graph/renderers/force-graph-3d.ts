@@ -62,6 +62,7 @@ const renderForceGraph3D: RendererFunction = (
 	nodeSize: number,
 	labelScale: number,
 	showLabels: boolean,
+	_chargeStrength: number,
 ): GraphInstance => {
 	void labelScale;
 	void showLabels;

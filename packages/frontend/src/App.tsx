@@ -19,6 +19,7 @@ function App() {
 		nodeSize,
 		labelScale,
 		showLabels,
+		chargeStrength,
 		settingsOpen,
 		detailsOpen,
 		selected,
@@ -35,6 +36,7 @@ function App() {
 		setNodeSize,
 		setLabelScale,
 		setShowLabels,
+		setChargeStrength,
 	} = useGraphManager({
 		theme,
 		renderer,
@@ -42,6 +44,7 @@ function App() {
 		nodeSize,
 		labelScale,
 		showLabels,
+		chargeStrength,
 	});
 
 	const { closeDetails, toggleDetails } = useDetailsPanel({
@@ -81,6 +84,11 @@ function App() {
 		dispatch({ type: "SET_STATE", payload: { showLabels: s } });
 	};
 
+	const handleChargeStrengthChange = (s: number) => {
+		setChargeStrength(s);
+		dispatch({ type: "SET_STATE", payload: { chargeStrength: s } });
+	};
+
 	return (
 		<div className="vh-100 vw-100">
 			<GlobalStyles />
@@ -97,12 +105,14 @@ function App() {
 				nodeSize={nodeSize}
 				labelScale={labelScale}
 				showLabels={showLabels}
+				chargeStrength={chargeStrength}
 				onThemeChange={handleThemeChange}
 				onRendererChange={handleRendererChange}
 				onLayoutChange={handleLayoutChange}
 				onNodeSizeChange={handleNodeSizeChange}
 				onLabelScaleChange={handleLabelScaleChange}
 				onShowLabelsChange={handleShowLabelsChange}
+				onChargeStrengthChange={handleChargeStrengthChange}
 				onClose={() => dispatch({ type: "TOGGLE_SETTINGS" })}
 			/>
 
