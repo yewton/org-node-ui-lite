@@ -1,0 +1,18 @@
+{
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"if": "Bash(git commit *)",
+						"command": "CI=true npm run lint && CI=true npm run check && CI=true npm test",
+						"timeout": 120,
+						"statusMessage": "CI チェック実行中 (lint / check / test)..."
+					}
+				]
+			}
+		]
+	}
+}

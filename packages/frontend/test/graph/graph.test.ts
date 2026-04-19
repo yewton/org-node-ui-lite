@@ -116,7 +116,16 @@ describe("Graph Module", () => {
 			const mockContainer = document.createElement("div");
 
 			await expect(
-				drawGraph("cytoscape", "cose", mockContainer, undefined, 10, 1, true, -120),
+				drawGraph(
+					"cytoscape",
+					"cose",
+					mockContainer,
+					undefined,
+					10,
+					1,
+					true,
+					-120,
+				),
 			).rejects.toThrow("API error: Network error");
 		});
 	});

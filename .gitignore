@@ -139,3 +139,4 @@ dist
 **/dist/
 .lsmcp/
 .eldev/
+.claude/settings.local.json
