@@ -124,10 +124,11 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 
 	const setRenderer = useCallback(
 		async (renderer: Renderer) => {
-			configRef.current = {
-				...configRef.current,
-				renderer,
-			};
+			if (graphElementRef.current) {
+				destroyGraph(graphInstanceRef.current, graphElementRef.current);
+			}
+			graphInstanceRef.current = undefined;
+			configRef.current = { ...configRef.current, renderer };
 			await refreshGraph();
 		},
 		[refreshGraph],
