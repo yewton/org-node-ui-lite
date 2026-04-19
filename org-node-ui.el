@@ -241,7 +241,7 @@ and the build output is shown."
                  (setq org-node-ui-mode nil)
                  (display-buffer (get-buffer "*org-node-ui-build*"))
                  (message (concat "org-node-ui: Build failed — "
-                                  "see buffer *org-node-ui-build*")))))))
+                                  "see buffer *org-node-ui-build*")))))))))
 
 ;;;; Minor mode
 

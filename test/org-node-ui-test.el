@@ -120,5 +120,17 @@
                                (org-node-ui--entry-raw entry))))))
       (delete-file tmpfile))))
 
+;;;; org-node-ui--build-and-start
+
+(ert-deftest org-node-ui--build-and-start/process-runs-in-repo-root ()
+  "npm process must start in repo-root regardless of the caller's directory."
+  (let (proc-dir)
+    (cl-letf (((symbol-function 'make-process)
+               (lambda (&rest _) (setq proc-dir default-directory) nil))
+              ((symbol-function 'file-directory-p) (lambda (_) nil)))
+      (let ((default-directory "/unrelated/"))
+        (org-node-ui--build-and-start "/usr/bin/npm" "/repo/root/")))
+    (should (string= "/repo/root/" proc-dir))))
+
 (provide 'org-node-ui-test)
 ;;; org-node-ui-test.el ends here
