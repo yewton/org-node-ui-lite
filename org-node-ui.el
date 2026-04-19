@@ -283,10 +283,8 @@ runs automatically in the background.  When `npm' cannot be found a
               (if npm
                   (org-node-ui--build-and-start npm root)
                 (user-error
-                 (concat "org-node-ui: front-end not built and `npm' not found.\n"
-                         "Please build manually:\n"
-                         "  cd %s\n"
-                         "  npm install && npm run build")
+                 "org-node-ui: front-end not built and `npm' not found; \
+build manually: cd %s && npm install && npm run build"
                  root)))))
       (error
        ;; Reset the mode flag so the user sees it as disabled.

@@ -5,6 +5,7 @@ export default defineConfig({
 		name: "frontend",
 		include: ["packages/frontend/test/**/*.test.{ts,tsx}"],
 		environment: "jsdom",
+		pool: "threads",
 		setupFiles: ["packages/frontend/test/setup.ts"],
 		testTimeout: 30000,
 		coverage: {
