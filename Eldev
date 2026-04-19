@@ -1,0 +1,3 @@
+; -*- mode: emacs-lisp; lexical-binding: t -*-
+(eldev-use-package-archive 'gnu)
+(eldev-use-package-archive 'melpa)
