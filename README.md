@@ -67,11 +67,12 @@ Open <http://localhost:5174/index.html>.
 ;; Set to nil to suppress the automatic browser open on startup
 (setq org-node-ui-open-on-start t)
 
-;; Tags that exclude a node from the graph (default: ROAM_EXCLUDE)
-(setq org-node-ui-exclude-tags '("ROAM_EXCLUDE" "noexport"))
-
 ;; Enable text caching for faster node content retrieval
 (setq org-mem-do-cache-text t)
+
+;; Node visibility in the graph follows org-node-filter-fn.
+;; The default excludes nodes tagged ROAM_EXCLUDE.  To customise:
+(setq org-node-filter-fn #'my-filter)
 ```
 
 ## API

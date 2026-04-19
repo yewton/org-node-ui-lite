@@ -7,7 +7,7 @@
 ;; Author: yewton
 ;; URL: https://github.com/yewton/org-node-ui-lite
 ;; Package-Version: 0.1.0
-;; Package-Requires: ((emacs "29.1") (org-mem "0.34") (simple-httpd "1.5.1"))
+;; Package-Requires: ((emacs "29.1") (org-mem "0.34") (org-node "1.0") (simple-httpd "1.5.1"))
 ;; Keywords: hypermedia, tools, org
 
 ;; This file is NOT part of GNU Emacs.
@@ -38,6 +38,7 @@
 (require 'json)
 (require 'simple-httpd)
 (require 'org-mem)
+(require 'org-node)
 
 ;;;; Customization
 
@@ -60,32 +61,20 @@
   :type 'function
   :group 'org-node-ui)
 
-(defcustom org-node-ui-exclude-tags '("ROAM_EXCLUDE")
-  "Nodes tagged with any of these strings are omitted from the graph."
-  :type '(repeat string)
-  :group 'org-node-ui)
-
 (defconst org-node-ui--this-file
   (or load-file-name buffer-file-name)
   "Absolute path to this file at load time.")
 
 ;;;; Data helpers
 
-(defun org-node-ui--exclude-p (entry)
-  "Return non-nil if ENTRY carries a tag from `org-node-ui-exclude-tags'."
-  (cl-intersection org-node-ui-exclude-tags
-                   (org-mem-entry-tags entry)
-                   :test #'string=))
-
 (defun org-node-ui--all-nodes ()
-  "Return ((id . ID) (title . TITLE)) alists for every visible ID-node."
-  (let (result)
-    (dolist (entry (org-mem-all-id-nodes))
-      (unless (org-node-ui--exclude-p entry)
-        (push `((id    . ,(org-mem-entry-id entry))
-                (title . ,(org-mem-entry-title entry)))
-              result)))
-    result))
+  "Return ((id . ID) (title . TITLE)) alists for every visible ID-node.
+Visibility is determined by `org-node-filter-fn', the same predicate
+org-node uses for its completion interface."
+  (mapcar (lambda (entry)
+            `((id    . ,(org-mem-entry-id entry))
+              (title . ,(org-mem-entry-title entry))))
+          (org-node-all-filtered-nodes)))
 
 (defun org-node-ui--all-edges ()
   "Return ((source . SRC-ID) (dest . DEST-ID)) alists for all ID-links."
