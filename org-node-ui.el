@@ -1,0 +1,209 @@
+;;; org-node-ui.el --- Lightweight HTTP backend for org-node graph UI  -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2025  yewton
+;;
+;; SPDX-License-Identifier: GPL-3.0-or-later
+;;
+;; Author: yewton
+;; URL: https://github.com/yewton/org-node-ui-lite
+;; Package-Version: 0.1.0
+;; Package-Requires: ((emacs "29.1") (org-mem "0.34") (org-node "1.0") (simple-httpd "1.5.1"))
+;; Keywords: hypermedia, tools, org
+
+;; This file is NOT part of GNU Emacs.
+
+;;; Commentary:
+;; HTTP server that exposes org-mem node data as JSON for the org-node-ui
+;; front-end (compiled to packages/frontend/dist/).
+;;
+;; ENDPOINTS
+;;   GET /api/graph.json        → all nodes + edges
+;;   GET /api/node/<id>.json    → single node, backlinks, raw Org text
+;;   GET /api/node/<id>/<path>  → binary asset (Base64url-encoded filename)
+;;
+;; QUICK START
+;;   1. Build the frontend: cd packages/frontend && npm install && npm run build
+;;   2. In init.el:
+;;        (add-to-list 'load-path "/path/to/org-node-ui")
+;;        (require 'org-node-ui)
+;;        (org-node-ui-mode +1)
+;;   3. Open http://localhost:5174/index.html
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'json)
+(require 'simple-httpd)
+(require 'org-mem)
+
+;;;; Customization
+
+(defgroup org-node-ui nil
+  "Serve org-mem graph data to the org-node-ui front-end."
+  :group 'applications)
+
+(defcustom org-node-ui-port 5174
+  "TCP port for the HTTP server."
+  :type 'integer
+  :group 'org-node-ui)
+
+(defcustom org-node-ui-open-on-start t
+  "Open a browser window when `org-node-ui-mode' is enabled."
+  :type 'boolean
+  :group 'org-node-ui)
+
+(defcustom org-node-ui-browser-function #'browse-url
+  "Function called with a URL string to open the UI in a browser."
+  :type 'function
+  :group 'org-node-ui)
+
+(defcustom org-node-ui-exclude-tags '("ROAM_EXCLUDE")
+  "Nodes tagged with any of these strings are omitted from the graph."
+  :type '(repeat string)
+  :group 'org-node-ui)
+
+(defconst org-node-ui--this-file
+  (or load-file-name buffer-file-name)
+  "Absolute path to this file at load time.")
+
+;;;; Data helpers
+
+(defun org-node-ui--exclude-p (entry)
+  "Return non-nil if ENTRY carries a tag from `org-node-ui-exclude-tags'."
+  (cl-intersection org-node-ui-exclude-tags
+                   (org-mem-entry-tags entry)
+                   :test #'string=))
+
+(defun org-node-ui--all-nodes ()
+  "Return ((id . ID) (title . TITLE)) alists for every visible ID-node."
+  (let (result)
+    (dolist (entry (org-mem-all-id-nodes))
+      (unless (org-node-ui--exclude-p entry)
+        (push `((id    . ,(org-mem-entry-id entry))
+                (title . ,(org-mem-entry-title entry)))
+              result)))
+    result))
+
+(defun org-node-ui--all-edges ()
+  "Return ((source . SRC-ID) (dest . DEST-ID)) alists for all ID-links."
+  (let (result)
+    (dolist (link (org-mem-all-id-links))
+      (when-let ((src (org-mem-link-nearby-id link))
+                 (dst (org-mem-link-target link)))
+        (push `((source . ,src) (dest . ,dst)) result)))
+    result))
+
+(defun org-node-ui--entry-raw (entry)
+  "Return the raw Org file text for ENTRY.
+Uses `org-mem-entry-text' when text caching is enabled; otherwise reads
+the full file from disk."
+  (if (and (bound-and-true-p org-mem-do-cache-text)
+           (org-mem-entry-text entry))
+      (org-mem-entry-text entry)
+    (with-temp-buffer
+      (insert-file-contents (org-mem-entry-file entry))
+      (buffer-string))))
+
+(defun org-node-ui--backlinks (id)
+  "Return ((source . SRC-ID) (title . TITLE)) alists for backlinks to ID."
+  (let (result)
+    (dolist (link (org-mem-id-links-to-id id))
+      (when-let* ((src-id (org-mem-link-nearby-id link))
+                  (src    (org-mem-entry-by-id src-id)))
+        (push `((source . ,src-id)
+                (title  . ,(org-mem-entry-title src)))
+              result)))
+    result))
+
+(defun org-node-ui--base64url-decode (str)
+  "Decode a Base64url-encoded string STR to plain text."
+  (let* ((b64 (replace-regexp-in-string
+               "_" "/" (replace-regexp-in-string "-" "+" str)))
+         (pad (% (- 4 (mod (length b64) 4)) 4)))
+    (base64-decode-string (concat b64 (make-string pad ?=)))))
+
+;;;; HTTP response helpers
+;;
+;; These functions must be called while `(current-buffer)' is an httpd-buffer
+;; (i.e., from inside a defservlet* body).  `httpd-send-header' reads the
+;; current buffer for the response body and sets `httpd--header-sent', which
+;; prevents `with-httpd-buffer' from sending a duplicate response.
+
+(defun org-node-ui--send-json (proc data &optional status)
+  "Respond to PROC with DATA encoded as JSON and STATUS (default 200)."
+  (erase-buffer)
+  (insert (json-encode data))
+  (httpd-send-header proc "application/json; charset=utf-8" (or status 200)
+                     :Access-Control-Allow-Origin "*"))
+
+;;;; Servlets
+
+(defservlet* api/graph.json text/plain ()
+  (org-node-ui--send-json
+   httpd-current-proc
+   `((nodes . ,(vconcat (org-node-ui--all-nodes)))
+     (edges . ,(vconcat (org-node-ui--all-edges))))))
+
+;; Unified handler for /api/node/:id.json and /api/node/:id/:path.
+;; simple-httpd dispatches on the longest fixed prefix (/api/node/), so
+;; both URL shapes must be distinguished inside a single servlet.
+(defservlet* api/node/:part1/:part2 text/plain ()
+  (let* ((parts  (split-string (substring httpd-path 1) "/"))
+         ;; parts = ["api" "node" "ID.json"]  or  ["api" "node" "ID" "ASSET"]
+         (id-raw (nth 2 parts))
+         (asset  (nth 3 parts))
+         (proc   httpd-current-proc))
+    (cond
+     ;; /api/node/:id.json  (3 path components)
+     ((and id-raw (or (null asset) (string= asset "")))
+      (let* ((node-id (file-name-sans-extension id-raw))
+             (entry   (org-mem-entry-by-id node-id)))
+        (if (null entry)
+            (org-node-ui--send-json proc '((error . "not_found")) 404)
+          (org-node-ui--send-json
+           proc
+           `((id        . ,node-id)
+             (title     . ,(org-mem-entry-title entry))
+             (raw       . ,(org-node-ui--entry-raw entry))
+             (backlinks . ,(vconcat (org-node-ui--backlinks node-id))))))))
+     ;; /api/node/:id/:path  (4 path components, Base64url-encoded filename)
+     ((and id-raw asset)
+      (let* ((entry (org-mem-entry-by-id id-raw)))
+        (if (null entry)
+            (org-node-ui--send-json proc '((error . "not_found")) 404)
+          (let* ((dir      (file-name-directory (org-mem-entry-file entry)))
+                 (ext      (file-name-extension asset t))
+                 (b64url   (file-name-sans-extension asset))
+                 (filename (org-node-ui--base64url-decode b64url))
+                 (full     (expand-file-name (concat filename ext) dir)))
+            (if (file-exists-p full)
+                ;; httpd-send-file calls httpd-discard-buffer, which sets
+                ;; httpd--header-sent=t and prevents a double response.
+                (httpd-send-file proc full)
+              (org-node-ui--send-json proc '((error . "not_found")) 404))))))
+     (t
+      (org-node-ui--send-json proc '((error . "not_found")) 404)))))
+
+;;;; Minor mode
+
+;;;###autoload
+(define-minor-mode org-node-ui-mode
+  "Global minor mode that serves the org-node-ui graph browser."
+  :global t
+  :group 'org-node-ui
+  (if org-node-ui-mode
+      (progn
+        (setq httpd-port org-node-ui-port
+              httpd-root (expand-file-name
+                          "packages/frontend/dist/"
+                          (file-name-directory org-node-ui--this-file)))
+        (httpd-start)
+        (when org-node-ui-open-on-start
+          (funcall org-node-ui-browser-function
+                   (format "http://localhost:%d/index.html" org-node-ui-port)))
+        (message "org-node-ui: http://localhost:%d/index.html" org-node-ui-port))
+    (httpd-stop)
+    (message "org-node-ui stopped")))
+
+(provide 'org-node-ui)
+;;; org-node-ui.el ends here

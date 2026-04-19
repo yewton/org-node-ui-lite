@@ -1,160 +1,98 @@
-# Org-Roam UI Lite
+# org-node-ui
 
-https://github.com/user-attachments/assets/20ba9c71-6de0-452d-988b-cea4b0ebcc45
+A lightweight graph browser for [org-node](https://github.com/meedstrom/org-node) /
+[org-mem](https://github.com/meedstrom/org-mem) users.
 
-(thanks @takeokunn)
+This is a personal experiment. It forks
+[org-roam-ui-lite](https://github.com/tani/org-roam-ui-lite) by Masaya Taniguchi
+and replaces the Emacs Lisp backend with one that reads from **org-mem** instead of
+the org-roam SQLite database. The front-end (Vite + React + Cytoscape / Force Graph)
+is used as-is. Many thanks to Masaya Taniguchi for the original work.
 
-A **self-contained, zero-config graph viewer** for your
-[Org-roam](https://www.orgroam.com) notes. Run it either as a tiny Node server
-or straight from Emacs, then open a browser and explore your knowledge graph
-with a snappy UI powered by Cytoscape or Force Graph.
+## Features
 
-# Features
+- Graph view of all org-mem ID-nodes and their links
+- Click a node to open a side panel with the raw Org content and backlinks
+- Org rendering: MathJax, Mermaid diagrams, syntax-highlighted code blocks
+- Multiple renderers: Cytoscape, Force Graph 2D/3D
+- Themes: Nord Dark, Gruvbox Dark, Dracula Dark, light/dark toggle
+- Read-only; no WebSocket required
 
-- **Dual back-ends**
-  - **Node (Hono)** – fast, serves JSON + static assets.
-  - **Emacs (simple-httpd)** – one-file drop-in; perfect for local use.
-- **Themeable** – Nord Dark, Gruvbox Dark, Dracula Dark, plus light/dark.
-- **Deterministic node colours** based on UUID for easy visual grouping.
-- **Interactive layout switching** (fcose, concentric, grid, …).
-- **Selectable renderers** – Cytoscape, Force Graph (2D) and 3D Force Graph.
-- **Backlink panel** with Org-styled rendering (MathJax, Mermaid, syntax
-  highlighting with copy button).
-- **Offline export** – dump the JSON once, host on any static server.
+## Prerequisites
 
-# Repository layout
+- Emacs 29.1 or later
+- [`org-mem`](https://github.com/meedstrom/org-mem) ≥ 0.34 installed and
+  `org-mem-updater-mode` enabled
+- [`org-node`](https://github.com/meedstrom/org-node) ≥ 1.0 installed
+- [`simple-httpd`](https://github.com/skeeto/simple-httpd) ≥ 1.5.1 installed
 
-    org-roam-ui-lite/
-    ├── packages/
-    │   ├── backend/    ← Node + Hono JSON API
-    │   ├── frontend/   ← Vite + React + Cytoscape SPA
-    │   └── emacs/      ← org-roam-ui-lite.el (single-file server)
-    ├── scripts/        ← build & export helpers (zx)
-    ├── flake.nix       ← reproducible dev env (Nix ≥2.18)
-    └── openapi.yaml    ← shared API contract (typed via openapi-typescript)
+## Installation
 
-# Stable
+### Manual
 
-# Quick start (pre-built)
-
-```bash
-$ curl -fsSLO https://github.com/tani/org-roam-ui-lite/releases/latest/download/org-roam-ui-lite.zip
-$ unzip ./org-roam-ui-lite.zip
-$ cd org-roam-ui-lite
-$ node ./backend/dist/backend.js -d /path/to/database.db
+```
+git clone https://github.com/yewton/org-node-ui-lite.git
+cd org-node-ui-lite
+cd packages/frontend && npm install && npm run build && cd ../..
 ```
 
-Open [<http://localhost:5173>](http://localhost:5173) and start clicking nodes!
+Add to `init.el`:
 
-# Building a static-site (pre-built)
-
-```bash
-$ curl -fsSLO https://github.com/tani/org-roam-ui-lite/releases/latest/download/org-roam-ui-lite.zip
-$ unzip ./org-roam-ui-lite.zip
-$ cd org-roam-ui-lite
-$ node scripts/export.js -r . -d /path/to/database.db -o /path/to/output
-$ python3 -m http.server -d /path/to/output
+```elisp
+(add-to-list 'load-path "/path/to/org-node-ui-lite")
+(require 'org-node-ui)
+(org-node-ui-mode +1)
 ```
 
-# HEAD
+Open <http://localhost:5174/index.html>.
 
-# Quick start (npm)
+### With borg / straight / use-package
 
-```bash
-$ git clone https://github.com/tani/org-roam-ui-lite.git
-$ cd org-roam-ui-lite
-$ npm install
-$ npm run dev -- -d /path/to/database.db
+```elisp
+;; Example with straight.el
+(straight-use-package
+ '(org-node-ui :host github :repo "yewton/org-node-ui-lite"
+               :files ("org-node-ui.el" "packages/frontend/dist")))
+
+(require 'org-node-ui)
+(org-node-ui-mode +1)
 ```
 
-Open [<http://localhost:5173>](http://localhost:5173) and start clicking nodes!
+## Configuration
 
-# Building a static-site (npm)
+```elisp
+;; TCP port (default: 5174)
+(setq org-node-ui-port 5174)
 
-```bash
-$ git clone github.com/tani/org-roam-ui-lite.git
-$ cd org-roam-ui-lite
-$ npm install
-$ npm run export -- -d /path/to/database.db -o /path/to/output
-$ python3 -m http.server -d /path/to/output
+;; Set to nil to suppress the automatic browser open on startup
+(setq org-node-ui-open-on-start t)
+
+;; Tags that exclude a node from the graph (default: ROAM_EXCLUDE)
+(setq org-node-ui-exclude-tags '("ROAM_EXCLUDE" "noexport"))
+
+;; Enable text caching for faster node content retrieval
+(setq org-mem-do-cache-text t)
 ```
 
-# Nix
+## API
 
-## Quick start (Nix)
+| Endpoint | Description |
+|---|---|
+| `GET /api/graph.json` | All nodes and edges |
+| `GET /api/node/{id}.json` | Single node: title, raw Org text, backlinks |
+| `GET /api/node/{id}/{path}` | Binary asset (Base64url-encoded filename) |
 
-Replace v0.0.48 with the version you want to use.
+The full schema is defined in [`openapi.yaml`](openapi.yaml).
 
-```bash
-$ nix run 'github:tani/org-roam-ui-lite?tag=v0.0.48#serve' -- -d /path/to/database.db
-$ # nix run .#serve -- -d /path/to/database.db
-```
+## Known limitations
 
-Open [<http://localhost:5173>](http://localhost:5173) and start clicking nodes!
+- No real-time graph updates; reload the browser to reflect org file changes.
+- follow-mode (cursor tracking) is not implemented (planned for v0.2).
+- Read-only: node creation and deletion are out of scope.
 
-## Building a static-site (Nix)
+## Licence
 
-Replace v0.0.48 with the version you want to use.
+GNU GPL v3 or later — see [LICENSE.md](LICENSE.md).
 
-```bash
-$ nix run 'github:tani/org-roam-ui-lite?tag=v0.0.48#export' -- -d /path/to/database.db -o /path/to/output
-$ # nix run .#export -- -d /path/to/database.db -o /path/to/output
-$ python3 -m http.server -d /path/to/output
-```
-
-# Emacs
-
-## Build project (Emacs)
-
-```bash
-$ curl -fsSLO https://github.com/tani/org-roam-ui-lite/releases/latest/download/org-roam-ui-lite.zip
-$ unzip ./org-roam-ui-lite.zip
-```
-
-## Launch Emacs
-
-Add this to your `init.el` (requires Emacs 29.1 + Org-roam ≥2.2.2 + simple-httpd
-≥ 1.5.1):
-
-```commonlisp
-(add-to-list 'load-path "/path/to/org-roam-ui-lite/emacs")
-(require 'org-roam-ui-lite)
-(org-roam-ui-lite-mode)
-```
-
-Visit <http://localhost:5174/index.html> – that’s all.
-
-# API overview
-
-| Endpoint                | Description                 | Response          |
-| ----------------------- | --------------------------- | ----------------- |
-| GET /api/graph.json     | Whole graph (nodes + edges) | Graph object      |
-| GET /api/node/{id}.json | One node + backlinks        | Node or 404 error |
-
-The full contract is defined in `openapi.yaml` and kept in sync with TypeScript
-types via **openapi-typescript**.
-
-# Contributing
-
-1. Fork & create a feature branch.
-2. `npm run lint && npm run check` must pass.
-3. Open a PR – make sure to explain **why**.
-
-All code is formatted/linted by **Biome**; commits that fail CI will be rejected
-automatically.
-
-# Licence
-
-© 2025 Masaya Taniguchi Released under the **GNU GPL v3 or later** – see
-[LICENSE.org](LICENSE.org).
-
-# Acknowledgements
-
-- [Org-roam](https://github.com/org-roam/org-roam) for the database &
-  inspiration.
-- [Hono](https://hono.dev), [Cytoscape.js](https://js.cytoscape.org),
-  [Force Graph](https://github.com/vasturiano/force-graph),
-  [React](https://react.dev).
-- Colour palettes from **Nord**, **Gruvbox** and **Dracula** themes.
-
-Happy note-exploring! 🎈
+Based on [org-roam-ui-lite](https://github.com/tani/org-roam-ui-lite) © 2025
+Masaya Taniguchi, also released under the GNU GPL v3 or later.
