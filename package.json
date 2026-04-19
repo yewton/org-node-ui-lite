@@ -1,9 +1,10 @@
 {
-	"name": "org-roam-ui-lite",
+	"name": "org-node-ui",
 	"private": true,
 	"type": "module",
+	"version": "0.1.0",
 	"workspaces": [
-		"packages/*"
+		"packages/frontend"
 	],
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.8",
@@ -12,38 +13,25 @@
 		"@types/cytoscape": "^3.31.0",
 		"@types/hast": "^3.0.4",
 		"@types/jest": "^30.0.0",
-		"@types/license-checker": "^25.0.6",
-		"@types/mime-types": "^3.0.1",
 		"@types/node": "^25.0.0",
 		"@types/react": "^19.2.7",
 		"@types/react-dom": "^19.2.3",
-		"@types/sql.js": "^1.4.9",
 		"@typescript/native-preview": "^7.0.0-dev.20251210.1",
 		"@vitejs/plugin-react": "^5.1.2",
 		"@vitest/coverage-v8": "^4.0.15",
 		"@vitest/ui": "^4.0.15",
 		"jsdom": "^27.3.0",
-		"lefthook": "^2.0.9",
-		"license-checker": "^25.0.1",
-		"npm-run-all": "^4.1.5",
-		"openapi-typescript": "^7.10.1",
-		"tsdown": "^0.17.2",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.7",
 		"vitest": "^4.0.15"
 	},
 	"scripts": {
-		"prebuild": "node openapi.ts | tee packages/frontend/src/api/api.d.ts packages/backend/src/api.d.ts > /dev/null && biome format --write packages/frontend/src/api/api.d.ts packages/backend/src/api.d.ts",
-		"build": "npm run build --workspaces && node ./scripts/build.ts",
-		"export": "npm run build && node ./scripts/export.ts -r ./dist",
-		"dev": "npm-run-all -p dev:frontend 'dev:backend -- {@}' --",
-		"dev:frontend": "npm --workspace=packages/frontend run dev --",
-		"dev:backend": "npm --workspace=packages/backend run dev --",
+		"build": "npm --workspace=packages/frontend run build",
+		"dev": "npm --workspace=packages/frontend run dev",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"check": "tsgo",
 		"test": "vitest",
 		"test:ui": "vitest --ui"
-	},
-	"version": "0.2.9"
+	}
 }

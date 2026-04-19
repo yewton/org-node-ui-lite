@@ -1,0 +1,35 @@
+{
+	"hooks": {
+		"PreToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"if": "Bash(git rebase *)",
+						"command": "git log main..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ' > /tmp/pre-rebase-commit-count.txt || true"
+					}
+				]
+			}
+		],
+		"PostToolUse": [
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"if": "Bash(git commit *)",
+						"command": "CI=true npm run lint && CI=true npm run check && CI=true npm test && if command -v eldev >/dev/null 2>&1; then eldev -p -dtT compile && eldev -dtT test; fi",
+						"timeout": 180,
+						"statusMessage": "Running CI checks (lint / check / test / eldev)..."
+					},
+					{
+						"type": "command",
+						"if": "Bash(git rebase *)",
+						"command": "PRE=$(cat /tmp/pre-rebase-commit-count.txt 2>/dev/null || echo 0); POST=$(git log main..HEAD --oneline 2>/dev/null | wc -l | tr -d ' '); if [ \"$PRE\" -gt 0 ] && [ \"$POST\" -lt \"$((PRE / 2))\" ]; then printf '{\"systemMessage\": \"WARNING: Rebase dropped %s of %s commits (before: %s, after: %s). Verify with: git log main..HEAD --oneline\"}' \"$((PRE - POST))\" \"$PRE\" \"$PRE\" \"$POST\"; fi"
+					}
+				]
+			}
+		]
+	}
+}

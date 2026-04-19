@@ -20,12 +20,14 @@ describe("SettingsPanel", () => {
 				nodeSize={10}
 				labelScale={1}
 				showLabels={true}
+				chargeStrength={-120}
 				onThemeChange={handleChange}
 				onRendererChange={handleChange}
 				onLayoutChange={handleChange}
 				onNodeSizeChange={handleChange}
 				onLabelScaleChange={handleChange}
 				onShowLabelsChange={handleChange}
+				onChargeStrengthChange={handleChange}
 				onClose={handleClose}
 			/>,
 		);

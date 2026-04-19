@@ -12,7 +12,7 @@ import type {
 } from "./graph-types.ts";
 import { Layouts, Renderers, Themes } from "./graph-types.ts";
 
-const api = createClient<paths>({ baseUrl: "./" });
+const api = createClient<paths>({ baseUrl: "/" });
 
 export { Layouts, Renderers, Themes };
 export type { GraphInstance, GraphLink, GraphNode, Layout, Renderer, Theme };
@@ -34,12 +34,15 @@ async function fetchGraphData(): Promise<GraphData> {
 		label: n.title,
 		color: pickColor(n.id),
 	}));
+	const nodeIds = new Set(data.nodes.map((n) => n.id));
 	const edgeColor = getCssVariable("--bs-secondary");
-	const edges: GraphLink[] = data.edges.map((e) => ({
-		source: e.source,
-		target: e.dest,
-		color: edgeColor,
-	}));
+	const edges: GraphLink[] = data.edges
+		.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.dest))
+		.map((e) => ({
+			source: e.source,
+			target: e.dest,
+			color: edgeColor,
+		}));
 
 	return { nodes, edges };
 }
@@ -64,6 +67,7 @@ export async function drawGraph(
 	nodeSize: number,
 	labelScale: number,
 	showLabels: boolean,
+	chargeStrength: number,
 ): Promise<GraphInstance> {
 	const { nodes, edges } = await fetchGraphData();
 	const rendererMod = await rendererMap[renderer]();
@@ -77,6 +81,7 @@ export async function drawGraph(
 		nodeSize,
 		labelScale,
 		showLabels,
+		chargeStrength,
 	);
 }
 

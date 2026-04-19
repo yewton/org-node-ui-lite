@@ -21,6 +21,7 @@ interface GraphConfig {
 	nodeSize: number;
 	labelScale: number;
 	showLabels: boolean;
+	chargeStrength: number;
 }
 
 interface UseGraphManagerProps extends GraphConfig {
@@ -37,6 +38,7 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 		nodeSize: initialConfig.nodeSize,
 		labelScale: initialConfig.labelScale,
 		showLabels: initialConfig.showLabels,
+		chargeStrength: initialConfig.chargeStrength,
 	});
 	const themeRef = useRef<Theme>(initialConfig.theme);
 
@@ -94,6 +96,7 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 			configRef.current.nodeSize,
 			configRef.current.labelScale,
 			configRef.current.showLabels,
+			configRef.current.chargeStrength,
 		);
 		bindGraphEvents();
 	}, [bindGraphEvents]);
@@ -121,10 +124,11 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 
 	const setRenderer = useCallback(
 		async (renderer: Renderer) => {
-			configRef.current = {
-				...configRef.current,
-				renderer,
-			};
+			if (graphElementRef.current) {
+				destroyGraph(graphInstanceRef.current, graphElementRef.current);
+			}
+			graphInstanceRef.current = undefined;
+			configRef.current = { ...configRef.current, renderer };
 			await refreshGraph();
 		},
 		[refreshGraph],
@@ -175,6 +179,14 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 		[refreshGraph],
 	);
 
+	const setChargeStrength = useCallback(
+		async (chargeStrength: number) => {
+			configRef.current = { ...configRef.current, chargeStrength };
+			await refreshGraph();
+		},
+		[refreshGraph],
+	);
+
 	return {
 		graphRef,
 		openNodeAction,
@@ -186,6 +198,7 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 		setNodeSize,
 		setLabelScale,
 		setShowLabels,
+		setChargeStrength,
 		refreshGraph,
 	};
 }

@@ -10,6 +10,7 @@ export interface UiState {
 	nodeSize: number;
 	labelScale: number;
 	showLabels: boolean;
+	chargeStrength: number;
 	settingsOpen: boolean;
 	detailsOpen: boolean;
 	selected: components["schemas"]["Node"] & { body?: ReactNode };
@@ -32,6 +33,7 @@ export const initialState: UiState = {
 	nodeSize: 10,
 	labelScale: 0.5,
 	showLabels: true,
+	chargeStrength: -120,
 	settingsOpen: false,
 	detailsOpen: false,
 	selected: {} as components["schemas"]["Node"] & { body?: ReactNode },
@@ -44,6 +46,7 @@ export const persistedKeys: (keyof UiState)[] = [
 	"nodeSize",
 	"labelScale",
 	"showLabels",
+	"chargeStrength",
 ];
 
 export function uiReducer(state: UiState, action: Action): UiState {
