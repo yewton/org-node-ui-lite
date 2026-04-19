@@ -23,9 +23,10 @@ jobs:
   test-elisp:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: emacs-eldev/setup-eldev@v1
+      - uses: jcs090218/setup-emacs@master
         with:
-          emacs-version: "29.4"
-      - run: eldev compile
-      - run: eldev test
+          version: "29.4"
+      - uses: emacs-eldev/setup-eldev@v1
+      - uses: actions/checkout@v4
+      - run: eldev -p -dtT compile
+      - run: eldev -p -dtT test
