@@ -10,20 +10,15 @@
 ;;;; org-node-ui--base64url-decode
 
 (ert-deftest org-node-ui--base64url-decode/one-padding-char ()
-  ;; base64("hello") = "aGVsbG8=" -> base64url: "aGVsbG8"
   (should (string= "hello" (org-node-ui--base64url-decode "aGVsbG8"))))
 
 (ert-deftest org-node-ui--base64url-decode/two-padding-chars ()
-  ;; base64("test") = "dGVzdA==" -> base64url: "dGVzdA"
   (should (string= "test" (org-node-ui--base64url-decode "dGVzdA"))))
 
 (ert-deftest org-node-ui--base64url-decode/url-safe-minus ()
-  ;; base64url uses '-' where standard base64 uses '+'
-  ;; base64("~~~") = "fn5+" -> base64url: "fn5-"
   (should (string= "~~~" (org-node-ui--base64url-decode "fn5-"))))
 
 (ert-deftest org-node-ui--base64url-decode/longer-string ()
-  ;; base64("diagram") = "ZGlhZ3JhbQ==" -> base64url: "ZGlhZ3JhbQ"
   (should (string= "diagram" (org-node-ui--base64url-decode "ZGlhZ3JhbQ"))))
 
 ;;;; org-node-ui--all-nodes
@@ -39,7 +34,6 @@
                (lambda () (list e1 e2))))
       (let ((result (org-node-ui--all-nodes)))
         (should (= 2 (length result)))
-        ;; result alist keys are 'id and 'title (as produced by our code)
         (should (string= "id1"   (alist-get 'id    (nth 0 result))))
         (should (string= "Alpha" (alist-get 'title (nth 0 result))))
         (should (string= "id2"   (alist-get 'id    (nth 1 result))))
