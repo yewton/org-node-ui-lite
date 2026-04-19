@@ -22,12 +22,15 @@
 ;;   GET /api/node/<id>/<path>  → binary asset (Base64url-encoded filename)
 ;;
 ;; QUICK START
-;;   1. Build the frontend: cd packages/frontend && npm install && npm run build
-;;   2. In init.el:
-;;        (add-to-list 'load-path "/path/to/org-node-ui")
-;;        (require 'org-node-ui)
-;;        (org-node-ui-mode +1)
-;;   3. Open http://localhost:5174/index.html
+;;   In init.el:
+;;     (add-to-list 'load-path "/path/to/org-node-ui")
+;;     (require 'org-node-ui)
+;;     (org-node-ui-mode +1)
+;;
+;;   On first run, org-node-ui-mode checks whether the front-end has been
+;;   built.  If `npm' is available it runs `npm install && npm run build'
+;;   automatically (in the background) and opens the browser when done.
+;;   If `npm' is not found, a user-error is raised with manual instructions.
 
 ;;; Code:
 
@@ -184,26 +187,115 @@ the full file from disk."
      (t
       (org-node-ui--send-json proc '((error . "not_found")) 404)))))
 
+;;;; Setup helpers
+
+(defvar org-node-ui--build-process nil
+  "Live `npm run build' process, or nil when no build is in progress.")
+
+(defun org-node-ui--dist-p ()
+  "Return non-nil when the compiled front-end exists."
+  (file-exists-p
+   (expand-file-name "packages/frontend/dist/index.html"
+                     (file-name-directory org-node-ui--this-file))))
+
+(defun org-node-ui--check-prerequisites ()
+  "Warn about soft issues; signal `user-error' for hard failures."
+  (unless (bound-and-true-p org-mem-updater-mode)
+    (message (concat "org-node-ui: warning: `org-mem-updater-mode' is not active. "
+                     "Node data may be stale. Consider adding "
+                     "(org-mem-updater-mode +1) to your init.el."))))
+
+(defun org-node-ui--start-server ()
+  "Configure httpd and open the browser.  Called after prerequisites pass."
+  (setq httpd-port org-node-ui-port
+        httpd-root (expand-file-name "packages/frontend/dist/"
+                                     (file-name-directory org-node-ui--this-file)))
+  (httpd-start)
+  (when org-node-ui-open-on-start
+    (funcall org-node-ui-browser-function
+             (format "http://localhost:%d/index.html" org-node-ui-port)))
+  (message "org-node-ui: http://localhost:%d/index.html" org-node-ui-port))
+
+(defun org-node-ui--build-and-start (npm repo-root)
+  "Run npm install (if needed) and npm run build asynchronously.
+NPM is the absolute path to the npm executable.  REPO-ROOT is the
+top-level directory of the org-node-ui checkout.
+On success the HTTP server is started; on failure the mode is disabled
+and the build output is shown."
+  (let* ((has-modules (file-directory-p
+                       (expand-file-name "node_modules" repo-root)))
+         (sh-cmd (if has-modules
+                     (format "%s --prefix packages/frontend run build" npm)
+                   (format "%s install && %s --prefix packages/frontend run build"
+                           npm npm)))
+         (buf (get-buffer-create "*org-node-ui-build*")))
+    (with-current-buffer buf (erase-buffer))
+    (message "org-node-ui: %s front-end (this may take a minute)…"
+             (if has-modules "Building" "Installing dependencies and building"))
+    (setq org-node-ui--build-process
+          (make-process
+           :name "org-node-ui-build"
+           :buffer buf
+           :command (list shell-file-name shell-command-switch sh-cmd)
+           :default-directory repo-root
+           :sentinel
+           (lambda (_proc event)
+             (setq org-node-ui--build-process nil)
+             (if (string-match-p "finished" event)
+                 (progn
+                   (message "org-node-ui: Build complete.")
+                   ;; Only start if the user hasn't disabled the mode meanwhile.
+                   (when org-node-ui-mode
+                     (org-node-ui--start-server)))
+               (setq org-node-ui-mode nil)
+               (display-buffer (get-buffer "*org-node-ui-build*"))
+               (message (concat "org-node-ui: Build failed — "
+                                "see buffer *org-node-ui-build*"))))))))
+
 ;;;; Minor mode
 
 ;;;###autoload
 (define-minor-mode org-node-ui-mode
-  "Global minor mode that serves the org-node-ui graph browser."
+  "Global minor mode that serves the org-node-ui graph browser.
+
+On first enable, checks whether the front-end has been compiled.
+If the `dist/' directory is missing and `npm' is available the build
+runs automatically in the background.  When `npm' cannot be found a
+`user-error' is raised with manual build instructions."
   :global t
   :group 'org-node-ui
-  (if org-node-ui-mode
-      (progn
-        (setq httpd-port org-node-ui-port
-              httpd-root (expand-file-name
-                          "packages/frontend/dist/"
-                          (file-name-directory org-node-ui--this-file)))
-        (httpd-start)
-        (when org-node-ui-open-on-start
-          (funcall org-node-ui-browser-function
-                   (format "http://localhost:%d/index.html" org-node-ui-port)))
-        (message "org-node-ui: http://localhost:%d/index.html" org-node-ui-port))
+  (cond
+   (org-node-ui-mode
+    ;; Abort any stale build from a previous enable attempt.
+    (when (process-live-p org-node-ui--build-process)
+      (kill-process org-node-ui--build-process)
+      (setq org-node-ui--build-process nil))
+    (condition-case err
+        (progn
+          (org-node-ui--check-prerequisites)
+          (if (org-node-ui--dist-p)
+              (org-node-ui--start-server)
+            ;; Front-end not built yet — try to build it automatically.
+            (let* ((root (file-name-directory org-node-ui--this-file))
+                   (npm  (executable-find "npm")))
+              (if npm
+                  (org-node-ui--build-and-start npm root)
+                (user-error
+                 (concat "org-node-ui: front-end not built and `npm' not found.\n"
+                         "Please build manually:\n"
+                         "  cd %s\n"
+                         "  npm install && npm run build")
+                 root)))))
+      (error
+       ;; Reset the mode flag so the user sees it as disabled.
+       (setq org-node-ui-mode nil)
+       (signal (car err) (cdr err)))))
+   (t
+    (when (process-live-p org-node-ui--build-process)
+      (kill-process org-node-ui--build-process)
+      (setq org-node-ui--build-process nil))
     (httpd-stop)
-    (message "org-node-ui stopped")))
+    (message "org-node-ui stopped"))))
 
 (provide 'org-node-ui)
 ;;; org-node-ui.el ends here
