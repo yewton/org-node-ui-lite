@@ -224,10 +224,11 @@ On success the HTTP server is started; on failure the mode is disabled
 and the build output is shown."
   (let* ((has-modules (file-directory-p
                        (expand-file-name "node_modules" repo-root)))
+         (npm*   (shell-quote-argument npm))
          (sh-cmd (if has-modules
-                     (format "%s --prefix packages/frontend run build" npm)
+                     (format "%s --prefix packages/frontend run build" npm*)
                    (format "%s install && %s --prefix packages/frontend run build"
-                           npm npm)))
+                           npm* npm*)))
          (buf (get-buffer-create "*org-node-ui-build*")))
     (with-current-buffer buf (erase-buffer))
     (message "org-node-ui: %s front-end (this may take a minute)…"
@@ -236,6 +237,7 @@ and the build output is shown."
           (make-process
            :name "org-node-ui-build"
            :buffer buf
+           :noquery t
            :command (list shell-file-name shell-command-switch sh-cmd)
            :default-directory repo-root
            :sentinel
