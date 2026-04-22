@@ -207,6 +207,8 @@ the full file from disk."
 
 ;;;; Minor mode
 
+(declare-function org-node-ui--build-and-start "org-node-ui")
+
 ;;;###autoload
 (define-minor-mode org-node-ui-mode
   "Global minor mode that serves the org-node-ui graph browser.
