@@ -19,7 +19,7 @@
 					{
 						"type": "command",
 						"if": "Bash(git commit *)",
-						"command": "CI=true npm run lint && CI=true npm run check && CI=true npm test && if command -v eldev >/dev/null 2>&1; then eldev -p -dtT compile && eldev -dtT test; fi",
+						"command": "CI=true npm run lint && CI=true npm run check && CI=true npm test && if command -v eldev >/dev/null 2>&1; then eldev -p -dtT compile -W && eldev -dtT test; fi",
 						"timeout": 180,
 						"statusMessage": "Running CI checks (lint / check / test / eldev)..."
 					},
