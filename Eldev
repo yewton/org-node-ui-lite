@@ -1,3 +1,11 @@
 ; -*- mode: emacs-lisp; lexical-binding: t -*-
 (eldev-use-package-archive 'gnu)
 (eldev-use-package-archive 'melpa)
+
+(setf eldev-standard-excludes `(:or ,eldev-standard-excludes
+                                    "./packages"
+                                    "./node_modules"
+                                    "*.ts"
+                                    "*.json"
+                                    "*.yaml"
+                                    "*.md"))
