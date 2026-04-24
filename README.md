@@ -1,4 +1,4 @@
-# org-node-ui
+# org-node-ui-lite
 
 A lightweight graph browser for [org-node](https://github.com/meedstrom/org-node) /
 [org-mem](https://github.com/meedstrom/org-mem) users.
@@ -40,8 +40,8 @@ Add to `init.el`:
 
 ```elisp
 (add-to-list 'load-path "/path/to/org-node-ui-lite")
-(require 'org-node-ui)
-(org-node-ui-mode +1)
+(require 'org-node-ui-lite)
+(org-node-ui-lite-mode +1)
 ```
 
 Open <http://localhost:5174/index.html>.
@@ -51,21 +51,21 @@ Open <http://localhost:5174/index.html>.
 ```elisp
 ;; Example with straight.el
 (straight-use-package
- '(org-node-ui :host github :repo "yewton/org-node-ui-lite"
-               :files ("org-node-ui.el" "packages/frontend/dist")))
+ '(org-node-ui-lite :host github :repo "yewton/org-node-ui-lite"
+                    :files ("org-node-ui-lite.el" "packages/frontend/dist")))
 
-(require 'org-node-ui)
-(org-node-ui-mode +1)
+(require 'org-node-ui-lite)
+(org-node-ui-lite-mode +1)
 ```
 
 ## Configuration
 
 ```elisp
 ;; TCP port (default: 5174)
-(setq org-node-ui-port 5174)
+(setq org-node-ui-lite-port 5174)
 
 ;; Set to nil to suppress the automatic browser open on startup
-(setq org-node-ui-open-on-start t)
+(setq org-node-ui-lite-open-on-start t)
 
 ;; Enable text caching for faster node content retrieval
 (setq org-mem-do-cache-text t)
