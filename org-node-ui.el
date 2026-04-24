@@ -1,6 +1,6 @@
 ;;; org-node-ui.el --- Lightweight HTTP backend for org-node graph UI  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2025  yewton
+;; Copyright (C) 2025, 2026  yewton
 ;;
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 ;;

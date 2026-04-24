@@ -1,6 +1,7 @@
 ; -*- mode: emacs-lisp; lexical-binding: t -*-
 (eldev-use-package-archive 'gnu-elpa)
 (eldev-use-package-archive 'melpa)
+(eldev-use-plugin 'maintainer)
 
 (setf eldev-standard-excludes `(:or ,eldev-standard-excludes
                                     "./packages"
