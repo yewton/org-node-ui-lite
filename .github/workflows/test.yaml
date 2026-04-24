@@ -28,5 +28,5 @@ jobs:
           version: "29.4"
       - uses: emacs-eldev/setup-eldev@v1
       - uses: actions/checkout@v4
-      - run: eldev -p -dtT compile
-      - run: eldev -dtT test
+      - run: eldev --packaged --debug --trace --time compile --warnings-as-errors
+      - run: eldev --debug --trace --time test

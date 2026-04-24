@@ -140,3 +140,7 @@ dist
 .lsmcp/
 .eldev/
 .claude/settings.local.json
+
+# Added automatically by ‘eldev init’.
+/.eldev
+/Eldev-local

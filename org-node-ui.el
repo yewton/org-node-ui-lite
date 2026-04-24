@@ -1,6 +1,6 @@
 ;;; org-node-ui.el --- Lightweight HTTP backend for org-node graph UI  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2025  yewton
+;; Copyright (C) 2025, 2026  yewton
 ;;
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 ;;
@@ -139,7 +139,7 @@ the full file from disk."
 ;; Unified handler for /api/node/:id.json and /api/node/:id/:path.
 ;; simple-httpd dispatches on the longest fixed prefix (/api/node/), so
 ;; both URL shapes must be distinguished inside a single servlet.
-(defservlet* api/node/:part1/:part2 text/plain ()
+(defservlet* api/node/:_part1/:_part2 text/plain ()
   (let* ((parts  (split-string (substring httpd-path 1) "/"))
          ;; parts = ["api" "node" "ID.json"]  or  ["api" "node" "ID" "ASSET"]
          (id-raw (nth 2 parts))
@@ -205,44 +205,6 @@ the full file from disk."
              (format "http://localhost:%d/index.html" org-node-ui-port)))
   (message "org-node-ui: http://localhost:%d/index.html" org-node-ui-port))
 
-(defun org-node-ui--build-and-start (npm repo-root)
-  "Run npm install (if needed) and npm run build asynchronously.
-NPM is the absolute path to the npm executable.  REPO-ROOT is the
-top-level directory of the org-node-ui checkout.
-On success the HTTP server is started; on failure the mode is disabled
-and the build output is shown."
-  (let* ((has-modules (file-directory-p
-                       (expand-file-name "node_modules" repo-root)))
-         (npm*   (shell-quote-argument npm))
-         (sh-cmd (if has-modules
-                     (format "%s --prefix packages/frontend run build" npm*)
-                   (format "%s install && %s --prefix packages/frontend run build"
-                           npm* npm*)))
-         (buf (get-buffer-create "*org-node-ui-build*")))
-    (with-current-buffer buf (erase-buffer))
-    (message "org-node-ui: %s front-end (this may take a minute)…"
-             (if has-modules "Building" "Installing dependencies and building"))
-    (setq org-node-ui--build-process
-          (let ((default-directory repo-root))
-            (make-process
-             :name "org-node-ui-build"
-             :buffer buf
-             :noquery t
-             :command (list shell-file-name shell-command-switch sh-cmd)
-             :sentinel
-             (lambda (_proc event)
-               (setq org-node-ui--build-process nil)
-               (if (string-match-p "finished" event)
-                   (progn
-                     (message "org-node-ui: Build complete.")
-                     ;; Only start if the user hasn't disabled the mode meanwhile.
-                     (when org-node-ui-mode
-                       (org-node-ui--start-server)))
-                 (setq org-node-ui-mode nil)
-                 (display-buffer (get-buffer "*org-node-ui-build*"))
-                 (message (concat "org-node-ui: Build failed — "
-                                  "see buffer *org-node-ui-build*")))))))))
-
 ;;;; Minor mode
 
 ;;;###autoload
@@ -276,8 +238,7 @@ runs automatically in the background.  When `npm' cannot be found a
 build manually: cd %s && npm install && npm run build"
                  root)))))
       (error
-       ;; Reset the mode flag so the user sees it as disabled.
-       (setq org-node-ui-mode nil)
+       (org-node-ui-mode -1)
        (signal (car err) (cdr err)))))
    (t
     (when (process-live-p org-node-ui--build-process)
@@ -285,6 +246,44 @@ build manually: cd %s && npm install && npm run build"
       (setq org-node-ui--build-process nil))
     (httpd-stop)
     (message "org-node-ui stopped"))))
+
+(defun org-node-ui--build-and-start (npm repo-root)
+  "Run npm install (if needed) and npm run build asynchronously.
+NPM is the absolute path to the npm executable.  REPO-ROOT is the
+top-level directory of the org-node-ui checkout.
+On success the HTTP server is started; on failure the mode is disabled
+and the build output is shown."
+  (let* ((has-modules (file-directory-p
+                       (expand-file-name "node_modules" repo-root)))
+         (npm*   (shell-quote-argument npm))
+         (sh-cmd (if has-modules
+                     (format "%s --prefix packages/frontend run build" npm*)
+                   (format "%s install && %s --prefix packages/frontend run build"
+                           npm* npm*)))
+         (buf (get-buffer-create "*org-node-ui-build*")))
+    (with-current-buffer buf (erase-buffer))
+    (message "org-node-ui: %s front-end (this may take a minute)…"
+             (if has-modules "Building" "Installing dependencies and building"))
+    (setq org-node-ui--build-process
+          (let ((default-directory repo-root))
+            (make-process
+             :name "org-node-ui-build"
+             :buffer buf
+             :noquery t
+             :command (list shell-file-name shell-command-switch sh-cmd)
+             :sentinel
+             (lambda (_proc event)
+               (setq org-node-ui--build-process nil)
+               (if (string-match-p "finished" event)
+                   (progn
+                     (message "org-node-ui: Build complete.")
+                     ;; Only start if the user hasn't disabled the mode meanwhile.
+                     (when org-node-ui-mode
+                       (org-node-ui--start-server)))
+                 (org-node-ui-mode -1)
+                 (display-buffer (get-buffer "*org-node-ui-build*"))
+                 (message (concat "org-node-ui: Build failed — "
+                                  "see buffer *org-node-ui-build*")))))))))
 
 (provide 'org-node-ui)
 ;;; org-node-ui.el ends here
