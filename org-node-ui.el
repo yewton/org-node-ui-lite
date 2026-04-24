@@ -139,7 +139,7 @@ the full file from disk."
 ;; Unified handler for /api/node/:id.json and /api/node/:id/:path.
 ;; simple-httpd dispatches on the longest fixed prefix (/api/node/), so
 ;; both URL shapes must be distinguished inside a single servlet.
-(defservlet* api/node/:part1/:part2 text/plain ()
+(defservlet* api/node/:_part1/:_part2 text/plain ()
   (let* ((parts  (split-string (substring httpd-path 1) "/"))
          ;; parts = ["api" "node" "ID.json"]  or  ["api" "node" "ID" "ASSET"]
          (id-raw (nth 2 parts))
