@@ -276,8 +276,7 @@ runs automatically in the background.  When `npm' cannot be found a
 build manually: cd %s && npm install && npm run build"
                  root)))))
       (error
-       ;; Reset the mode flag so the user sees it as disabled.
-       (setq org-node-ui-mode nil)
+       (org-node-ui-mode -1)
        (signal (car err) (cdr err)))))
    (t
     (when (process-live-p org-node-ui--build-process)
