@@ -2,7 +2,7 @@ name: Update screenshots
 
 on:
   push:
-    branches: ["**"]
+    branches-ignore: ["main"]
     paths:
       - "e2e/screenshots.spec.ts"
       - "playwright.screenshots.config.ts"
