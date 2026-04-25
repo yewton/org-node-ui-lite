@@ -144,3 +144,4 @@ dist
 # Added automatically by ‘eldev init’.
 /.eldev
 /Eldev-local
+test-results/
