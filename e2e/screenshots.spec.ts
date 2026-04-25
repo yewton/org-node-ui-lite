@@ -23,6 +23,7 @@ mkdirSync(screenshotsDir, { recursive: true });
 
 test.use({
 	colorScheme: "dark",
+	reducedMotion: "reduce",
 	viewport: { width: 1280, height: 800 },
 });
 
