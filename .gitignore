@@ -146,3 +146,5 @@ dist
 /Eldev-local
 test-results/
 .emacs-server-pid
+*.elc
+*-autoloads.el
