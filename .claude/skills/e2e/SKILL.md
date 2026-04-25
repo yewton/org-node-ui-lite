@@ -1,3 +1,8 @@
+---
+description: E2E test guide for org-node-ui-lite (Playwright + Emacs integration)
+trigger: automatic
+---
+
 # /e2e — E2E test guide
 
 ## Run
