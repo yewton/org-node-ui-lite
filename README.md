@@ -9,6 +9,19 @@ and replaces the Emacs Lisp backend with one that reads from **org-mem** instead
 the org-roam SQLite database. The front-end (Vite + React + Cytoscape / Force Graph)
 is used as-is. Many thanks to Masaya Taniguchi for the original work.
 
+## Screenshots
+
+![Graph view](docs/screenshots/graph.png)
+
+<details>
+<summary>Settings panel / Node details panel</summary>
+
+![Settings panel](docs/screenshots/settings.png)
+
+![Node details panel](docs/screenshots/node-details.png)
+
+</details>
+
 ## Features
 
 - Graph view of all org-mem ID-nodes and their links

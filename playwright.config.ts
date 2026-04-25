@@ -4,6 +4,7 @@ export default defineConfig({
 	globalSetup: "./e2e/global-setup.ts",
 	globalTeardown: "./e2e/global-teardown.ts",
 	testDir: "./e2e",
+	testIgnore: ["**/screenshots.spec.ts"],
 	timeout: 30_000,
 	expect: { timeout: 5_000 },
 	fullyParallel: false,
