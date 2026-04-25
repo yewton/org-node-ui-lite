@@ -1,0 +1,48 @@
+* Index
+:PROPERTIES:
+:ID: proj-index
+:END:
+
+Personal knowledge base hub.
+
+- [[id:math-linear-algebra][Linear Algebra]]
+- [[id:prog-algorithms][Algorithms]]
+- [[id:sci-physics][Physics]]
+- [[id:phil-logic][Logic]]
+- [[id:hist-modern][Modern History]]
+
+* Emacs Setup
+:PROPERTIES:
+:ID: proj-emacs-setup
+:END:
+
+Personal Emacs configuration.
+
+* Reading List
+:PROPERTIES:
+:ID: proj-reading-list
+:END:
+
+Books to read.
+
+- [[id:hist-science][History of Science]]
+- [[id:sci-astronomy][Astronomy]]
+- [[id:phil-ethics][Ethics]]
+
+* Notes Methodology
+:PROPERTIES:
+:ID: proj-notes-method
+:END:
+
+How I organize notes.
+
+See also: [[id:prog-emacs-lisp][Emacs Lisp]], [[id:proj-index][Index]]
+
+* Daily Log
+:PROPERTIES:
+:ID: proj-daily-log
+:END:
+
+Daily study log.
+
+See also: [[id:proj-notes-method][Notes Methodology]]

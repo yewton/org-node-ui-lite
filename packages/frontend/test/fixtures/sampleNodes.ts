@@ -106,7 +106,7 @@ export const SAMPLE_GRAPH: Graph = {
  * Detailed node objects with raw Org-mode content and computed backlinks.
  * Backlinks are derived from SAMPLE_EDGES (dest node lists its source nodes).
  */
-export const SAMPLE_NODES: Record<string, Node> = {
+export const SAMPLE_NODES = {
 	"math-linear-algebra": {
 		id: "math-linear-algebra",
 		title: "Linear Algebra",
@@ -792,6 +792,6 @@ Reference hub: [[id:proj-index][Index]]`,
 - Explored [[id:sci-neuroscience][Neuroscience]] connections to [[id:phil-mind][philosophy of mind]]`,
 		backlinks: [],
 	},
-};
+} satisfies Record<string, Node>;
 
 export const SAMPLE_NODE_IDS = SAMPLE_NODE_SUMMARIES.map((n) => n.id);

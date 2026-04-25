@@ -1,96 +1,41 @@
 /**
- * E2E tests for the org-node-ui-lite frontend.
+ * E2E tests for org-node-ui-lite.
  *
- * All backend API calls are intercepted and fulfilled with the 30-node sample
- * dataset so the tests run without a live Emacs httpd process.
+ * Emacs runs org-node-ui-lite-mode with the fixture org files in e2e/fixtures/.
+ * The Vite dev server (port 5173) proxies /api/* to the Emacs HTTP server
+ * (port 5174).  No API mocking — all requests hit the real backend.
  */
 import { expect, test } from "@playwright/test";
-import {
-	SAMPLE_GRAPH,
-	SAMPLE_NODES,
-} from "../packages/frontend/test/fixtures/sampleNodes.ts";
 
 // ── Selectors ─────────────────────────────────────────────────────────────────
 
 // SettingsPanel always remains in the DOM (Bootstrap offcanvas); "show" makes it visible.
 const SETTINGS_PANEL = '[role="dialog"].offcanvas-start';
-// DetailsPanel is unmounted (returns null) when closed so its locator uniquely
-// identifies it when open.
+// DetailsPanel is unmounted (returns null) when closed.
 const DETAILS_PANEL = '[role="dialog"].offcanvas-end';
 
-// ── Shared setup ──────────────────────────────────────────────────────────────
-
-async function mockApi(page: import("@playwright/test").Page) {
-	// Graph endpoint: returns all 30 nodes + 31 edges
-	await page.route("**/api/graph.json", (route) =>
-		route.fulfill({
-			status: 200,
-			contentType: "application/json",
-			body: JSON.stringify(SAMPLE_GRAPH),
-		}),
-	);
-
-	// Node detail endpoint: matches /api/node/<id>.json
-	await page.route("**/api/node/*.json", (route) => {
-		const url = route.request().url();
-		const match = url.match(/api\/node\/(.+?)\.json/);
-		const id = match?.[1];
-		const node = id ? SAMPLE_NODES[id] : undefined;
-		if (node) {
-			return route.fulfill({
-				status: 200,
-				contentType: "application/json",
-				body: JSON.stringify(node),
-			});
-		}
-		return route.fulfill({
-			status: 404,
-			contentType: "application/json",
-			body: JSON.stringify({ error: "not_found" }),
-		});
-	});
-}
+const EMACS_PORT = 5174;
 
 // ── App loading ───────────────────────────────────────────────────────────────
 
 test.describe("App loading", () => {
-	test.beforeEach(async ({ page }) => {
-		await mockApi(page);
-		await page.goto("/");
-	});
-
 	test("renders the root container", async ({ page }) => {
+		await page.goto("/");
 		await expect(page.locator(".vh-100.vw-100")).toBeVisible();
 	});
 
-	test("calls the graph API on startup", async ({ page }) => {
-		let called = false;
-		await page.route("**/api/graph.json", (route) => {
-			called = true;
-			return route.fulfill({
-				status: 200,
-				contentType: "application/json",
-				body: JSON.stringify(SAMPLE_GRAPH),
-			});
-		});
-		await page.reload();
-		await page.waitForLoadState("domcontentloaded");
-		expect(called).toBe(true);
+	test("fetches the graph API on startup", async ({ page }) => {
+		const responsePromise = page.waitForResponse("**/api/graph.json");
+		await page.goto("/");
+		const response = await responsePromise;
+		expect(response.status()).toBe(200);
 	});
 
 	test("graph API request URL ends with api/graph.json", async ({ page }) => {
-		let capturedUrl = "";
-		await page.route("**/api/graph.json", (route) => {
-			capturedUrl = route.request().url();
-			return route.fulfill({
-				status: 200,
-				contentType: "application/json",
-				body: JSON.stringify(SAMPLE_GRAPH),
-			});
-		});
-		await page.reload();
-		await page.waitForLoadState("domcontentloaded");
-		expect(capturedUrl).toMatch(/api\/graph\.json$/);
+		const responsePromise = page.waitForResponse("**/api/graph.json");
+		await page.goto("/");
+		const response = await responsePromise;
+		expect(response.url()).toMatch(/api\/graph\.json$/);
 	});
 });
 
@@ -98,19 +43,16 @@ test.describe("App loading", () => {
 
 test.describe("Settings panel", () => {
 	test.beforeEach(async ({ page }) => {
-		await mockApi(page);
 		await page.goto("/");
 	});
 
 	test("settings button is visible in the top-left", async ({ page }) => {
-		// The gear button is the first position-fixed button (left: 1rem)
 		await expect(page.locator("button.position-fixed").first()).toBeVisible();
 	});
 
 	test("settings panel is not shown before the button is clicked", async ({
 		page,
 	}) => {
-		// SettingsPanel is in the DOM but Bootstrap hides it without the "show" class
 		await expect(page.locator(SETTINGS_PANEL)).not.toBeVisible();
 	});
 
@@ -160,19 +102,16 @@ test.describe("Settings panel", () => {
 
 test.describe("Details panel", () => {
 	test.beforeEach(async ({ page }) => {
-		await mockApi(page);
 		await page.goto("/");
 	});
 
 	test("details toggle button is visible in the top-right", async ({
 		page,
 	}) => {
-		// The chevron button is the second position-fixed button (right: 1rem)
 		await expect(page.locator("button.position-fixed").nth(1)).toBeVisible();
 	});
 
 	test("details panel is absent from DOM before toggle", async ({ page }) => {
-		// DetailsPanel returns null when closed, so it is not in the DOM at all
 		await expect(page.locator(DETAILS_PANEL)).not.toBeAttached();
 	});
 
@@ -195,37 +134,90 @@ test.describe("Details panel", () => {
 		page,
 	}) => {
 		await page.locator("button.position-fixed").nth(1).click();
-		// Initial selected is {} so title falls back to this prompt text
 		await expect(
 			page.locator(DETAILS_PANEL).getByText("Click a node to view details"),
 		).toBeVisible();
 	});
 });
 
-// ── API mock validation ───────────────────────────────────────────────────────
+// ── Live API validation ───────────────────────────────────────────────────────
 
-test.describe("Sample data fixture validation", () => {
-	test("SAMPLE_GRAPH has 30 nodes", () => {
-		expect(SAMPLE_GRAPH.nodes).toHaveLength(30);
+test.describe("Live Emacs API", () => {
+	test("graph endpoint returns 30 nodes", async ({ request }) => {
+		const res = await request.get(
+			`http://localhost:${EMACS_PORT}/api/graph.json`,
+		);
+		expect(res.status()).toBe(200);
+		const data = (await res.json()) as { nodes: { id: string }[] };
+		expect(data.nodes).toHaveLength(30);
 	});
 
-	test("SAMPLE_GRAPH has 31 edges", () => {
-		expect(SAMPLE_GRAPH.edges).toHaveLength(31);
+	test("graph endpoint returns 31 edges", async ({ request }) => {
+		const res = await request.get(
+			`http://localhost:${EMACS_PORT}/api/graph.json`,
+		);
+		expect(res.status()).toBe(200);
+		const data = (await res.json()) as {
+			edges: { source: string; dest: string }[];
+		};
+		expect(data.edges).toHaveLength(31);
 	});
 
-	test("SAMPLE_NODES covers all 30 IDs", () => {
-		const keys = Object.keys(SAMPLE_NODES);
-		expect(keys).toHaveLength(30);
-		for (const { id } of SAMPLE_GRAPH.nodes) {
-			expect(keys).toContain(id);
-		}
-	});
-
-	test("every edge references existing node IDs", () => {
-		const ids = new Set(SAMPLE_GRAPH.nodes.map((n) => n.id));
-		for (const { source, dest } of SAMPLE_GRAPH.edges) {
+	test("every edge references a node that exists in the graph", async ({
+		request,
+	}) => {
+		const res = await request.get(
+			`http://localhost:${EMACS_PORT}/api/graph.json`,
+		);
+		const data = (await res.json()) as {
+			nodes: { id: string }[];
+			edges: { source: string; dest: string }[];
+		};
+		const ids = new Set(data.nodes.map((n) => n.id));
+		for (const { source, dest } of data.edges) {
 			expect(ids.has(source), `Unknown source: ${source}`).toBe(true);
 			expect(ids.has(dest), `Unknown dest: ${dest}`).toBe(true);
 		}
+	});
+
+	test("node endpoint returns details for math-linear-algebra", async ({
+		request,
+	}) => {
+		const res = await request.get(
+			`http://localhost:${EMACS_PORT}/api/node/math-linear-algebra.json`,
+		);
+		expect(res.status()).toBe(200);
+		const node = (await res.json()) as {
+			id: string;
+			title: string;
+			raw: string;
+			backlinks: { source: string; title: string }[];
+		};
+		expect(node.id).toBe("math-linear-algebra");
+		expect(node.title).toBe("Linear Algebra");
+		expect(node.raw.length).toBeGreaterThan(0);
+		expect(Array.isArray(node.backlinks)).toBe(true);
+	});
+
+	test("node endpoint returns backlinks for prog-algorithms", async ({
+		request,
+	}) => {
+		const res = await request.get(
+			`http://localhost:${EMACS_PORT}/api/node/prog-algorithms.json`,
+		);
+		expect(res.status()).toBe(200);
+		const node = (await res.json()) as {
+			backlinks: { source: string; title: string }[];
+		};
+		const sources = node.backlinks.map((b) => b.source);
+		expect(sources).toContain("math-linear-algebra");
+		expect(sources).toContain("proj-index");
+	});
+
+	test("node endpoint returns 404 for an unknown ID", async ({ request }) => {
+		const res = await request.get(
+			`http://localhost:${EMACS_PORT}/api/node/nonexistent-id-xyz.json`,
+		);
+		expect(res.status()).toBe(404);
 	});
 });

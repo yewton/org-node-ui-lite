@@ -145,3 +145,4 @@ dist
 /.eldev
 /Eldev-local
 test-results/
+.emacs-server-pid

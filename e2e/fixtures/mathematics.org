@@ -1,0 +1,44 @@
+* Linear Algebra
+:PROPERTIES:
+:ID: math-linear-algebra
+:END:
+
+Linear algebra studies vector spaces and linear transformations.
+
+See also: [[id:prog-algorithms][Algorithms]]
+
+* Calculus
+:PROPERTIES:
+:ID: math-calculus
+:END:
+
+The study of continuous change.
+
+See also: [[id:sci-physics][Physics]]
+
+* Number Theory
+:PROPERTIES:
+:ID: math-number-theory
+:END:
+
+The study of integers and prime numbers.
+
+See also: [[id:prog-functional][Functional Programming]]
+
+* Statistics
+:PROPERTIES:
+:ID: math-statistics
+:END:
+
+Data collection, analysis, and interpretation.
+
+See also: [[id:sci-biology][Biology]]
+
+* Topology
+:PROPERTIES:
+:ID: math-topology
+:END:
+
+Properties preserved under continuous deformation.
+
+See also: [[id:phil-metaphysics][Metaphysics]]

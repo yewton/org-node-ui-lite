@@ -1,6 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
+	globalSetup: "./e2e/global-setup.ts",
+	globalTeardown: "./e2e/global-teardown.ts",
 	testDir: "./e2e",
 	timeout: 30_000,
 	expect: { timeout: 5_000 },
@@ -23,9 +25,5 @@ export default defineConfig({
 		url: "http://localhost:5173",
 		reuseExistingServer: !process.env.CI,
 		timeout: 60_000,
-		env: {
-			// Suppress Vite proxy errors when the Emacs backend is not running
-			VITE_PROXY_WARN: "false",
-		},
 	},
 });

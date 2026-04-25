@@ -337,7 +337,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("renders node title for a programming node", () => {
-		const node = SAMPLE_NODES["prog-algorithms"]!;
+		const node = SAMPLE_NODES["prog-algorithms"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -351,7 +351,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("shows Backlinks section for node with 3 backlinks (prog-algorithms)", () => {
-		const node = SAMPLE_NODES["prog-algorithms"]!;
+		const node = SAMPLE_NODES["prog-algorithms"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -368,7 +368,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("does NOT show Backlinks section for node with 0 backlinks (math-calculus)", () => {
-		const node = SAMPLE_NODES["math-calculus"]!;
+		const node = SAMPLE_NODES["math-calculus"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -382,7 +382,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("shows both backlinks for node with 2 backlinks (phil-metaphysics)", () => {
-		const node = SAMPLE_NODES["phil-metaphysics"]!;
+		const node = SAMPLE_NODES["phil-metaphysics"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -398,7 +398,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("clicking a backlink calls onOpenNode with the source ID", () => {
-		const node = SAMPLE_NODES["prog-algorithms"]!;
+		const node = SAMPLE_NODES["prog-algorithms"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -413,7 +413,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("clicking second backlink calls onOpenNode with correct source ID", () => {
-		const node = SAMPLE_NODES["prog-algorithms"]!;
+		const node = SAMPLE_NODES["prog-algorithms"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -428,7 +428,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("renders the hub node (proj-index) and its single backlink", () => {
-		const node = SAMPLE_NODES["proj-index"]!;
+		const node = SAMPLE_NODES["proj-index"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -443,7 +443,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("does not render the dialog when open=false", () => {
-		const node = SAMPLE_NODES["sci-physics"]!;
+		const node = SAMPLE_NODES["sci-physics"];
 		const { queryByRole } = render(
 			<DetailsPanel
 				open={false}
@@ -457,7 +457,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("does NOT show Backlinks for proj-daily-log (0 backlinks)", () => {
-		const node = SAMPLE_NODES["proj-daily-log"]!;
+		const node = SAMPLE_NODES["proj-daily-log"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -471,7 +471,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("shows both backlinks for phil-mind (neuroscience + ethics)", () => {
-		const node = SAMPLE_NODES["phil-mind"]!;
+		const node = SAMPLE_NODES["phil-mind"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -486,7 +486,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("shows both backlinks for sci-biology (statistics + chemistry)", () => {
-		const node = SAMPLE_NODES["sci-biology"]!;
+		const node = SAMPLE_NODES["sci-biology"];
 		render(
 			<DetailsPanel
 				open={true}
@@ -501,7 +501,7 @@ describe("DetailsPanel with sample nodes", () => {
 	});
 
 	it("renders node body content", () => {
-		const node = SAMPLE_NODES["math-topology"]!;
+		const node = SAMPLE_NODES["math-topology"];
 		render(
 			<DetailsPanel
 				open={true}
