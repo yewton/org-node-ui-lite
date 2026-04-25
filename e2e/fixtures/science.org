@@ -5,6 +5,9 @@
 
 The scientific study of life and living organisms.
 
+#+CAPTION: Biology diagram
+[[./img/test.png]]
+
 See also: [[id:sci-neuroscience][Neuroscience]]
 
 * Chemistry
