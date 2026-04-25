@@ -83,10 +83,10 @@ test("node details", async ({ page }) => {
 	await page.goto("/");
 	await waitForGraph(page);
 
-	await page.locator("button.position-fixed").nth(1).click();
-	await waitForOffcanvasOpen(page, DETAILS_PANEL);
-
-	// Click at several canvas positions until a node responds.
+	// Click canvas positions until a node is found.  Clicking a graph node
+	// automatically opens the details panel with the processed body — so we
+	// do NOT open the panel first (the open panel would occlude the right
+	// portion of the canvas and intercept our clicks).
 	const canvas = page.locator(GRAPH_CANVAS).first();
 	const box = await canvas.boundingBox();
 
@@ -129,7 +129,8 @@ test("node details", async ({ page }) => {
 			await page.mouse.click(box.x + box.width * rx, box.y + box.height * ry);
 			try {
 				await responsePromise;
-				// Node found — wait for the Org body to finish rendering.
+				// Node found — wait for the panel to open and body to render.
+				await waitForOffcanvasOpen(page, DETAILS_PANEL);
 				await page.waitForFunction(
 					(sel) => {
 						const div = document.querySelector(sel);
@@ -140,7 +141,7 @@ test("node details", async ({ page }) => {
 				);
 				break;
 			} catch {
-				// No node at this position, or body not yet rendered — try the next one.
+				// No node at this position — try the next one.
 			}
 		}
 	}
