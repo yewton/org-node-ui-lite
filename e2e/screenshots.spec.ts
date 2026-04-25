@@ -10,7 +10,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const screenshotsDir = join(__dirname, "..", "docs", "screenshots");
@@ -42,7 +42,7 @@ test.beforeEach(async ({ page }) => {
 	});
 });
 
-async function waitForGraph(page: Parameters<typeof test>[1]) {
+async function waitForGraph(page: Page) {
 	await page.locator(GRAPH_CANVAS).waitFor({ state: "visible" });
 	// Allow the force simulation to stabilise before snapping.
 	await page.waitForTimeout(5000);
