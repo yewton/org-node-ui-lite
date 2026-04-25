@@ -18,7 +18,10 @@
 
 (add-to-list 'load-path e2e/repo-root)
 
-(let ((pkgs (expand-file-name ".eldev/29.3/packages" e2e/repo-root)))
+(let ((pkgs (expand-file-name
+             (format ".eldev/%d.%d/packages"
+                     emacs-major-version emacs-minor-version)
+             e2e/repo-root)))
   (when (file-directory-p pkgs)
     (dolist (d (directory-files pkgs t "^[^.]"))
       (when (file-directory-p d)
