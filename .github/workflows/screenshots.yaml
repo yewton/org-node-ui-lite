@@ -5,6 +5,7 @@ on:
     branches: ["**"]
     paths:
       - "e2e/screenshots.spec.ts"
+      - "playwright.screenshots.config.ts"
       - "packages/frontend/src/**"
       - "packages/frontend/package.json"
       - ".github/workflows/screenshots.yaml"
