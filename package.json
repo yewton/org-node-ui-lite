@@ -35,6 +35,6 @@
 		"test": "vitest",
 		"test:ui": "vitest --ui",
 		"test:e2e": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers playwright test",
-		"screenshots": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers playwright test e2e/screenshots.spec.ts"
+		"screenshots": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers playwright test --config playwright.screenshots.config.ts"
 	}
 }
