@@ -1,0 +1,49 @@
+name: Update screenshots
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "e2e/screenshots.spec.ts"
+      - "playwright.screenshots.config.ts"
+      - "packages/frontend/src/**"
+      - "packages/frontend/package.json"
+      - ".github/workflows/screenshots.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: jcs090218/setup-emacs@master
+        with:
+          version: "29.4"
+      - uses: emacs-eldev/setup-eldev@v1
+      - run: npm install
+      - run: eldev prepare
+      - run: npx playwright install --with-deps chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+      - run: npm run screenshots
+      - name: Commit screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots/
+          if git diff --cached --quiet; then
+            echo "Screenshots unchanged, nothing to commit."
+          else
+            git commit -m "chore: update README screenshots [skip ci]"
+            git push
+          fi
