@@ -115,12 +115,21 @@ test("node details", async ({ page }) => {
 			await page.mouse.click(box.x + box.width * rx, box.y + box.height * ry);
 			try {
 				await responsePromise;
-				await page.waitForTimeout(800);
 				break;
 			} catch {
 				// No node at this position — try the next one.
 			}
 		}
+
+		// Wait for the Org processing pipeline to finish rendering the node body.
+		await page.waitForFunction(
+			(sel) => {
+				const div = document.querySelector(sel);
+				return div?.hasChildNodes();
+			},
+			`${DETAILS_PANEL} [aria-label="Details content"] > div`,
+			{ timeout: 10_000 },
+		);
 	}
 
 	await page.screenshot({ path: join(screenshotsDir, "node-details.png") });
