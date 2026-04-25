@@ -83,32 +83,34 @@ test("node details", async ({ page }) => {
 	await page.goto("/");
 	await waitForGraph(page);
 
-	// Fetch the first node ID from the graph API, then open it via the
-	// dev-only hook exposed by App.tsx.  This is deterministic and avoids
-	// relying on probabilistic canvas-click hit detection.
-	const nodeId = await page.evaluate(async () => {
-		const resp = await fetch("/api/graph.json");
-		const data = (await resp.json()) as { nodes: Array<{ id: string }> };
-		return data.nodes[0]?.id ?? null;
-	});
+	// Open sci-biology via the dev-only hook: that node contains an inline
+	// image ([[./img/test.png]]), so the details panel screenshot demonstrates
+	// image rendering through the asset API.
+	await page.evaluate(async (id) => {
+		const fn = (window as { __openNode?: (id: string) => Promise<void> })
+			.__openNode;
+		await fn?.(id);
+	}, "sci-biology");
 
-	if (nodeId) {
-		await page.evaluate(async (id) => {
-			const fn = (window as { __openNode?: (id: string) => Promise<void> })
-				.__openNode;
-			await fn?.(id);
-		}, nodeId);
+	await waitForOffcanvasOpen(page, DETAILS_PANEL);
+	await page.waitForFunction(
+		(sel) => {
+			const div = document.querySelector(sel);
+			return div?.hasChildNodes();
+		},
+		`${DETAILS_PANEL} [aria-label="Details content"] > div`,
+		{ timeout: 10_000 },
+	);
 
-		await waitForOffcanvasOpen(page, DETAILS_PANEL);
-		await page.waitForFunction(
-			(sel) => {
-				const div = document.querySelector(sel);
-				return div?.hasChildNodes();
-			},
-			`${DETAILS_PANEL} [aria-label="Details content"] > div`,
-			{ timeout: 10_000 },
-		);
-	}
+	// Wait for the inline image to load (src has been rewritten to the asset API).
+	await page.waitForFunction(
+		(sel) => {
+			const img = document.querySelector<HTMLImageElement>(`${sel} img`);
+			return img?.complete && img.naturalWidth > 0;
+		},
+		DETAILS_PANEL,
+		{ timeout: 10_000 },
+	);
 
 	await page.screenshot({ path: join(screenshotsDir, "node-details.png") });
 });

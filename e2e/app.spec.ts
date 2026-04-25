@@ -220,4 +220,24 @@ test.describe("Live Emacs API", () => {
 		);
 		expect(res.status()).toBe(404);
 	});
+
+	// sci-biology node contains [[./img/test.png]].
+	// The asset segment is encodeBase64url("./img/test") + ".png".
+	test("asset endpoint serves image for sci-biology node", async ({
+		request,
+	}) => {
+		const res = await request.get(
+			`http://localhost:${EMACS_PORT}/api/node/sci-biology/Li9pbWcvdGVzdA.png`,
+		);
+		expect(res.status()).toBe(200);
+		const ct = res.headers()["content-type"] ?? "";
+		expect(ct).toMatch(/image\//);
+	});
+
+	test("asset endpoint returns 404 for unknown image", async ({ request }) => {
+		const res = await request.get(
+			`http://localhost:${EMACS_PORT}/api/node/sci-biology/bm9uZXhpc3RlbnQ.png`,
+		);
+		expect(res.status()).toBe(404);
+	});
 });
