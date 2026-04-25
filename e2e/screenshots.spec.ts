@@ -83,67 +83,31 @@ test("node details", async ({ page }) => {
 	await page.goto("/");
 	await waitForGraph(page);
 
-	// Click canvas positions until a node is found.  Clicking a graph node
-	// automatically opens the details panel with the processed body — so we
-	// do NOT open the panel first (the open panel would occlude the right
-	// portion of the canvas and intercept our clicks).
-	const canvas = page.locator(GRAPH_CANVAS).first();
-	const box = await canvas.boundingBox();
+	// Fetch the first node ID from the graph API, then open it via the
+	// dev-only hook exposed by App.tsx.  This is deterministic and avoids
+	// relying on probabilistic canvas-click hit detection.
+	const nodeId = await page.evaluate(async () => {
+		const resp = await fetch("/api/graph.json");
+		const data = (await resp.json()) as { nodes: Array<{ id: string }> };
+		return data.nodes[0]?.id ?? null;
+	});
 
-	if (box) {
-		// Dense grid covering the center region where force-graph nodes settle.
-		const positions: [number, number][] = [
-			[0.5, 0.5],
-			[0.4, 0.4],
-			[0.6, 0.4],
-			[0.4, 0.6],
-			[0.6, 0.6],
-			[0.5, 0.35],
-			[0.5, 0.65],
-			[0.3, 0.5],
-			[0.7, 0.5],
-			[0.35, 0.35],
-			[0.65, 0.65],
-			[0.35, 0.65],
-			[0.65, 0.35],
-			[0.45, 0.45],
-			[0.55, 0.45],
-			[0.45, 0.55],
-			[0.55, 0.55],
-			[0.5, 0.42],
-			[0.5, 0.58],
-			[0.42, 0.5],
-			[0.58, 0.5],
-			[0.25, 0.4],
-			[0.75, 0.4],
-			[0.25, 0.6],
-			[0.75, 0.6],
-		];
+	if (nodeId) {
+		await page.evaluate(async (id) => {
+			const fn = (window as { __openNode?: (id: string) => Promise<void> })
+				.__openNode;
+			await fn?.(id);
+		}, nodeId);
 
-		for (const [rx, ry] of positions) {
-			const responsePromise = page.waitForResponse(
-				(res) =>
-					res.url().includes("/api/node/") && res.url().endsWith(".json"),
-				{ timeout: 1500 },
-			);
-			await page.mouse.click(box.x + box.width * rx, box.y + box.height * ry);
-			try {
-				await responsePromise;
-				// Node found — wait for the panel to open and body to render.
-				await waitForOffcanvasOpen(page, DETAILS_PANEL);
-				await page.waitForFunction(
-					(sel) => {
-						const div = document.querySelector(sel);
-						return div?.hasChildNodes();
-					},
-					`${DETAILS_PANEL} [aria-label="Details content"] > div`,
-					{ timeout: 10_000 },
-				);
-				break;
-			} catch {
-				// No node at this position — try the next one.
-			}
-		}
+		await waitForOffcanvasOpen(page, DETAILS_PANEL);
+		await page.waitForFunction(
+			(sel) => {
+				const div = document.querySelector(sel);
+				return div?.hasChildNodes();
+			},
+			`${DETAILS_PANEL} [aria-label="Details content"] > div`,
+			{ timeout: 10_000 },
+		);
 	}
 
 	await page.screenshot({ path: join(screenshotsDir, "node-details.png") });

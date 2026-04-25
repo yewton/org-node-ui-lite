@@ -47,6 +47,11 @@ function App() {
 		chargeStrength,
 	});
 
+	// Expose openNodeAction for the screenshot test suite (dev builds only).
+	if (import.meta.env.DEV) {
+		Object.assign(window, { __openNode: openNodeAction });
+	}
+
 	const { closeDetails, toggleDetails } = useDetailsPanel({
 		detailsOpen,
 		resetNodeHighlight,
