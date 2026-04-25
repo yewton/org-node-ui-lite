@@ -1,0 +1,40 @@
+* Epistemology
+:PROPERTIES:
+:ID: phil-epistemology
+:END:
+
+The theory of knowledge.
+
+See also: [[id:phil-metaphysics][Metaphysics]]
+
+* Ethics
+:PROPERTIES:
+:ID: phil-ethics
+:END:
+
+The study of moral principles.
+
+See also: [[id:phil-mind][Philosophy of Mind]]
+
+* Logic
+:PROPERTIES:
+:ID: phil-logic
+:END:
+
+The study of valid reasoning.
+
+See also: [[id:phil-epistemology][Epistemology]]
+
+* Metaphysics
+:PROPERTIES:
+:ID: phil-metaphysics
+:END:
+
+The nature of reality.
+
+* Philosophy of Mind
+:PROPERTIES:
+:ID: phil-mind
+:END:
+
+The nature of mental phenomena.

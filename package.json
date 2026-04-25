@@ -8,6 +8,7 @@
 	],
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.8",
+		"@playwright/test": "^1.56.1",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.0",
 		"@types/cytoscape": "^3.31.0",
@@ -32,6 +33,7 @@
 		"lint:fix": "biome check --write .",
 		"check": "tsgo",
 		"test": "vitest",
-		"test:ui": "vitest --ui"
+		"test:ui": "vitest --ui",
+		"test:e2e": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers playwright test"
 	}
 }

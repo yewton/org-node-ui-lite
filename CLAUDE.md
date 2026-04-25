@@ -33,6 +33,9 @@ npx vitest run packages/frontend/test/path/to/file.test.ts
 
 # Run a single Elisp test by name pattern
 eldev test org-node-ui-lite--backlinks
+
+# Run Playwright E2E tests (starts Emacs + Vite automatically)
+npm run test:e2e
 ```
 
 ## Architecture
@@ -58,6 +61,49 @@ Vite + React SPA.  Key modules:
 - **`src/graph/`** — renderer-agnostic graph logic.  `graph.ts` drives draw/destroy; `graph-style.ts` handles highlight and theming; `graph/renderers/` contains three concrete adapters: `cytoscape.ts`, `force-graph.ts`, `force-graph-3d.ts`.
 - **`src/hooks/useGraphManager.ts`** — wires the store state to the active renderer instance.
 - **`src/utils/processor.ts`** — Org-to-React rendering pipeline: uniorg-parse → uniorg-rehype → rehype-mathjax / rehype-mermaid / rehype-pretty-code → rehype-react.
+
+## E2E tests
+
+`npm run test:e2e` runs Playwright tests in `e2e/`.  Use `/e2e` for the full
+guide.  Quick summary:
+
+- **`e2e/global-setup.ts`** spawns `emacs --batch --load e2e/emacs-server.el`,
+  which sets `org-mem-watch-dirs` to `e2e/fixtures/`, enables
+  `org-mem-updater-mode` + `org-node-cache-mode` (the documented quickstart),
+  and calls `httpd-start`.  It then polls `/api/graph.json` until nodes appear.
+- **Vite dev server** (port 5173) proxies `/api/*` to Emacs (port 5174).
+- **`e2e/fixtures/*.org`** are the test data.  Every heading that should be a
+  graph node needs `:PROPERTIES: :ID: some-id :END:`.  Every `[[id:X][Y]]`
+  link creates one edge — include only intentional links to keep counts exact.
+- **`e2e/global-teardown.ts`** sends SIGTERM to Emacs.
+
+When debugging E2E setup issues, trust the public API (`org-mem-watch-dirs`,
+`org-mem-updater-mode`) and the polling loop — do not reach into org-mem
+internals.
+
+## TypeScript patterns
+
+**`exactOptionalPropertyTypes: true` is enabled.**  Index-accessing a
+`Record<string, T>` returns `T | undefined`, which triggers the
+`noNonNullAssertion` lint rule if you suppress it with `!`.
+
+Preferred pattern for object literals that are indexed by known keys:
+
+```typescript
+// Use `satisfies` instead of an explicit type annotation.
+// TypeScript infers the concrete object type so literal-key access returns T,
+// not T | undefined, and no `!` assertion is needed.
+export const MY_MAP = {
+  "key-a": { ... },
+  "key-b": { ... },
+} satisfies Record<string, MyType>;
+
+// Access without `!`:
+const item = MY_MAP["key-a"]; // type: MyType
+```
+
+Use this pattern for any constant map whose keys are known at compile time
+(fixture data, ID→config tables, etc.).
 
 ## Language
 

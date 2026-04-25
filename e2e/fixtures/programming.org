@@ -1,0 +1,42 @@
+* Algorithms
+:PROPERTIES:
+:ID: prog-algorithms
+:END:
+
+Finite sequences of instructions for solving problems.
+
+See also: [[id:prog-data-structures][Data Structures]]
+
+* Data Structures
+:PROPERTIES:
+:ID: prog-data-structures
+:END:
+
+Organizing and storing data for efficient access.
+
+See also: [[id:prog-emacs-lisp][Emacs Lisp]]
+
+* Functional Programming
+:PROPERTIES:
+:ID: prog-functional
+:END:
+
+Computation as evaluation of mathematical functions.
+
+See also: [[id:prog-typescript][TypeScript]]
+
+* Emacs Lisp
+:PROPERTIES:
+:ID: prog-emacs-lisp
+:END:
+
+Scripting language for GNU Emacs.
+
+See also: [[id:proj-emacs-setup][Emacs Setup]]
+
+* TypeScript
+:PROPERTIES:
+:ID: prog-typescript
+:END:
+
+Strongly typed JavaScript superset.

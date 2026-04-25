@@ -144,3 +144,7 @@ dist
 # Added automatically by ‘eldev init’.
 /.eldev
 /Eldev-local
+test-results/
+.emacs-server-pid
+*.elc
+*-autoloads.el

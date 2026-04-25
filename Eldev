@@ -7,6 +7,7 @@
 (setf eldev-standard-excludes `(:or ,eldev-standard-excludes
                                     "./packages"
                                     "./node_modules"
+                                    "./e2e"
                                     "*.ts"
                                     "*.json"
                                     "*.yaml"

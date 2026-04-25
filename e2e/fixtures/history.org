@@ -1,0 +1,42 @@
+* Ancient History
+:PROPERTIES:
+:ID: hist-ancient
+:END:
+
+From the beginning of recorded history to 476 CE.
+
+See also: [[id:hist-medieval][Medieval History]]
+
+* Medieval History
+:PROPERTIES:
+:ID: hist-medieval
+:END:
+
+From the fall of Rome (476 CE) to ~1500 CE.
+
+See also: [[id:hist-modern][Modern History]]
+
+* Modern History
+:PROPERTIES:
+:ID: hist-modern
+:END:
+
+From the Renaissance to the present.
+
+* History of Science
+:PROPERTIES:
+:ID: hist-science
+:END:
+
+Development of scientific knowledge.
+
+See also: [[id:hist-technology][History of Technology]]
+
+* History of Technology
+:PROPERTIES:
+:ID: hist-technology
+:END:
+
+Human innovation from prehistory to the present.
+
+See also: [[id:prog-algorithms][Algorithms]]

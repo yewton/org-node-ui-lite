@@ -1,0 +1,42 @@
+* Biology
+:PROPERTIES:
+:ID: sci-biology
+:END:
+
+The scientific study of life and living organisms.
+
+See also: [[id:sci-neuroscience][Neuroscience]]
+
+* Chemistry
+:PROPERTIES:
+:ID: sci-chemistry
+:END:
+
+The study of matter and its properties.
+
+See also: [[id:sci-biology][Biology]]
+
+* Physics
+:PROPERTIES:
+:ID: sci-physics
+:END:
+
+Fundamental laws governing the universe.
+
+See also: [[id:sci-astronomy][Astronomy]]
+
+* Astronomy
+:PROPERTIES:
+:ID: sci-astronomy
+:END:
+
+The study of celestial objects and the universe.
+
+* Neuroscience
+:PROPERTIES:
+:ID: sci-neuroscience
+:END:
+
+The scientific study of the nervous system.
+
+See also: [[id:phil-mind][Philosophy of Mind]]
