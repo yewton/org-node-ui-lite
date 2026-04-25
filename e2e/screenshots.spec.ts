@@ -91,19 +91,33 @@ test("node details", async ({ page }) => {
 	const box = await canvas.boundingBox();
 
 	if (box) {
+		// Dense grid covering the center region where force-graph nodes settle.
 		const positions: [number, number][] = [
 			[0.5, 0.5],
-			[0.35, 0.4],
-			[0.65, 0.4],
-			[0.35, 0.6],
-			[0.65, 0.6],
-			[0.5, 0.3],
-			[0.5, 0.7],
-			[0.25, 0.5],
-			[0.75, 0.5],
-			[0.4, 0.35],
-			[0.6, 0.65],
+			[0.4, 0.4],
+			[0.6, 0.4],
+			[0.4, 0.6],
+			[0.6, 0.6],
+			[0.5, 0.35],
+			[0.5, 0.65],
+			[0.3, 0.5],
+			[0.7, 0.5],
+			[0.35, 0.35],
+			[0.65, 0.65],
+			[0.35, 0.65],
+			[0.65, 0.35],
+			[0.45, 0.45],
+			[0.55, 0.45],
 			[0.45, 0.55],
+			[0.55, 0.55],
+			[0.5, 0.42],
+			[0.5, 0.58],
+			[0.42, 0.5],
+			[0.58, 0.5],
+			[0.25, 0.4],
+			[0.75, 0.4],
+			[0.25, 0.6],
+			[0.75, 0.6],
 		];
 
 		for (const [rx, ry] of positions) {
@@ -115,21 +129,20 @@ test("node details", async ({ page }) => {
 			await page.mouse.click(box.x + box.width * rx, box.y + box.height * ry);
 			try {
 				await responsePromise;
+				// Node found — wait for the Org body to finish rendering.
+				await page.waitForFunction(
+					(sel) => {
+						const div = document.querySelector(sel);
+						return div?.hasChildNodes();
+					},
+					`${DETAILS_PANEL} [aria-label="Details content"] > div`,
+					{ timeout: 10_000 },
+				);
 				break;
 			} catch {
-				// No node at this position — try the next one.
+				// No node at this position, or body not yet rendered — try the next one.
 			}
 		}
-
-		// Wait for the Org processing pipeline to finish rendering the node body.
-		await page.waitForFunction(
-			(sel) => {
-				const div = document.querySelector(sel);
-				return div?.hasChildNodes();
-			},
-			`${DETAILS_PANEL} [aria-label="Details content"] > div`,
-			{ timeout: 10_000 },
-		);
 	}
 
 	await page.screenshot({ path: join(screenshotsDir, "node-details.png") });
