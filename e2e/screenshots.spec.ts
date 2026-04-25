@@ -10,7 +10,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, type Page, test } from "@playwright/test";
+import { type Page, test } from "@playwright/test";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const screenshotsDir = join(__dirname, "..", "docs", "screenshots");
@@ -45,8 +45,25 @@ test.beforeEach(async ({ page }) => {
 
 async function waitForGraph(page: Page) {
 	await page.locator(GRAPH_CANVAS).waitFor({ state: "visible" });
+	// Disable CSS transitions so panel open/close is instant and deterministic.
+	await page.addStyleTag({
+		content:
+			"*, *::before, *::after { transition: none !important; animation-duration: 0s !important; }",
+	});
 	// Allow the force simulation to stabilise before snapping.
 	await page.waitForTimeout(5000);
+}
+
+// Waits until the offcanvas panel is fully open (transform has reached none).
+async function waitForOffcanvasOpen(page: Page, selector: string) {
+	await page.waitForFunction((sel) => {
+		const el = document.querySelector(sel);
+		if (!el) return false;
+		const style = window.getComputedStyle(el);
+		if (style.visibility !== "visible") return false;
+		const t = style.transform;
+		return t === "none" || t === "matrix(1, 0, 0, 1, 0, 0)";
+	}, selector);
 }
 
 test("graph view", async ({ page }) => {
@@ -59,7 +76,7 @@ test("settings panel", async ({ page }) => {
 	await page.goto("/");
 	await waitForGraph(page);
 	await page.locator("button.position-fixed").first().click();
-	await expect(page.locator(SETTINGS_PANEL)).toBeVisible();
+	await waitForOffcanvasOpen(page, SETTINGS_PANEL);
 	await page.screenshot({ path: join(screenshotsDir, "settings.png") });
 });
 
@@ -68,7 +85,7 @@ test("node details", async ({ page }) => {
 	await waitForGraph(page);
 
 	await page.locator("button.position-fixed").nth(1).click();
-	await expect(page.locator(DETAILS_PANEL)).toBeVisible();
+	await waitForOffcanvasOpen(page, DETAILS_PANEL);
 
 	// Click at several canvas positions until a node responds.
 	const canvas = page.locator(GRAPH_CANVAS).first();
