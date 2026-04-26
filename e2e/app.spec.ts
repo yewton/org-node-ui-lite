@@ -14,9 +14,6 @@ const SETTINGS_PANEL = '[role="dialog"].offcanvas-start';
 // DetailsPanel is unmounted (returns null) when closed.
 const DETAILS_PANEL = '[role="dialog"].offcanvas-end';
 
-const EMACS_HOST = "127.0.0.1";
-const EMACS_PORT = 5174;
-
 // ── App loading ───────────────────────────────────────────────────────────────
 
 test.describe("App loading", () => {
