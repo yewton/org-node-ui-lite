@@ -41,6 +41,7 @@
 
 (require 'cl-lib)
 (require 'json)
+(require 'org)
 (require 'simple-httpd)
 (require 'org-mem)
 (require 'org-node)

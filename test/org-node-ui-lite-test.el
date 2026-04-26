@@ -125,7 +125,7 @@
 (ert-deftest org-node-ui-lite--track-current-node/sets-id-in-org-buffer ()
   "Sets the variable to the ID of the current heading."
   (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) t))
-            ((symbol-function 'org-entry-get)   (lambda (_pom prop) (when (equal prop "ID") "abc-123"))))
+            ((symbol-function 'org-entry-get-with-inheritance) (lambda (prop &optional _literal-nil _epom) (when (equal prop "ID") "abc-123"))))
     (let ((org-node-ui-lite--current-node-id nil))
       (org-node-ui-lite--track-current-node)
       (should (string= "abc-123" org-node-ui-lite--current-node-id)))))
@@ -138,9 +138,9 @@
       (should (null org-node-ui-lite--current-node-id)))))
 
 (ert-deftest org-node-ui-lite--track-current-node/sets-nil-when-heading-has-no-id ()
-  "Resets the variable to nil when the heading has no :ID: property."
+  "Resets the variable to nil when the heading has no :ID: property anywhere in the hierarchy."
   (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) t))
-            ((symbol-function 'org-entry-get)   (lambda (_pom _prop) nil)))
+            ((symbol-function 'org-entry-get-with-inheritance) (lambda (_prop &optional _literal-nil _epom) nil)))
     (let ((org-node-ui-lite--current-node-id "stale-id"))
       (org-node-ui-lite--track-current-node)
       (should (null org-node-ui-lite--current-node-id)))))
@@ -150,7 +150,7 @@
 (ert-deftest org-node-ui-lite-select-current/increments-seq-and-sets-id ()
   "Increments the explicit-seq counter and updates the current node ID."
   (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) t))
-            ((symbol-function 'org-entry-get)   (lambda (_pom prop) (when (equal prop "ID") "node-42"))))
+            ((symbol-function 'org-entry-get-with-inheritance) (lambda (prop &optional _literal-nil _epom) (when (equal prop "ID") "node-42"))))
     (let ((org-node-ui-lite--current-node-id nil)
           (org-node-ui-lite--explicit-seq 0))
       (org-node-ui-lite-select-current)
@@ -167,9 +167,9 @@
       (should (= 5 org-node-ui-lite--explicit-seq)))))
 
 (ert-deftest org-node-ui-lite-select-current/does-nothing-when-no-id-at-point ()
-  "Does not change seq or id when the heading has no :ID: property."
+  "Does not change seq or id when the heading has no :ID: property anywhere in the hierarchy."
   (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) t))
-            ((symbol-function 'org-entry-get)   (lambda (_pom _prop) nil)))
+            ((symbol-function 'org-entry-get-with-inheritance) (lambda (_prop &optional _literal-nil _epom) nil)))
     (let ((org-node-ui-lite--current-node-id "existing-id")
           (org-node-ui-lite--explicit-seq 3))
       (org-node-ui-lite-select-current)
