@@ -59,6 +59,21 @@ paths:
               schema:
                 type: string
 
+  api/current-node.json:
+    get:
+      summary: Get the org-node at point in the active Emacs window
+      description: >
+        Returns the ID of the org-node where the Emacs cursor currently resides,
+        or null when the active buffer is not an Org file or the cursor is not
+        inside a headed node that has an :ID: property.
+      responses:
+        "200":
+          description: Current node ID (may be null)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentNode"
+
   api/graph.json:
     get:
       summary: Get full node-edge graph
@@ -178,6 +193,24 @@ components:
           type: string
         title:
           type: string
+
+    CurrentNode:
+      type: object
+      required: [id, seq]
+      properties:
+        id:
+          type: string
+          nullable: true
+          description: >
+            ID of the org-node where the Emacs cursor currently resides, or
+            null when the cursor is outside an Org buffer or on a heading
+            without an :ID: property.
+        seq:
+          type: integer
+          description: >
+            Monotonically increasing counter, incremented each time the user
+            calls org-node-ui-lite-select-current.  The frontend uses this to
+            detect explicit selection requests regardless of follow-mode.
 
     Node:
       type: object

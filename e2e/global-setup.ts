@@ -43,7 +43,7 @@ export default async function globalSetup() {
 
 	while (Date.now() < deadline) {
 		try {
-			const res = await fetch(`http://localhost:${EMACS_PORT}/api/graph.json`);
+			const res = await fetch(`http://127.0.0.1:${EMACS_PORT}/api/graph.json`);
 			if (res.ok) {
 				const data = (await res.json()) as { nodes?: unknown[] };
 				if ((data.nodes?.length ?? 0) > 0) {

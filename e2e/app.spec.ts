@@ -14,6 +14,7 @@ const SETTINGS_PANEL = '[role="dialog"].offcanvas-start';
 // DetailsPanel is unmounted (returns null) when closed.
 const DETAILS_PANEL = '[role="dialog"].offcanvas-end';
 
+const EMACS_HOST = "127.0.0.1";
 const EMACS_PORT = 5174;
 
 // ── App loading ───────────────────────────────────────────────────────────────
@@ -145,7 +146,7 @@ test.describe("Details panel", () => {
 test.describe("Live Emacs API", () => {
 	test("graph endpoint returns 30 nodes", async ({ request }) => {
 		const res = await request.get(
-			`http://localhost:${EMACS_PORT}/api/graph.json`,
+			`http://${EMACS_HOST}:${EMACS_PORT}/api/graph.json`,
 		);
 		expect(res.status()).toBe(200);
 		const data = (await res.json()) as { nodes: { id: string }[] };
@@ -154,7 +155,7 @@ test.describe("Live Emacs API", () => {
 
 	test("graph endpoint returns 31 edges", async ({ request }) => {
 		const res = await request.get(
-			`http://localhost:${EMACS_PORT}/api/graph.json`,
+			`http://${EMACS_HOST}:${EMACS_PORT}/api/graph.json`,
 		);
 		expect(res.status()).toBe(200);
 		const data = (await res.json()) as {
@@ -167,7 +168,7 @@ test.describe("Live Emacs API", () => {
 		request,
 	}) => {
 		const res = await request.get(
-			`http://localhost:${EMACS_PORT}/api/graph.json`,
+			`http://${EMACS_HOST}:${EMACS_PORT}/api/graph.json`,
 		);
 		const data = (await res.json()) as {
 			nodes: { id: string }[];
@@ -184,7 +185,7 @@ test.describe("Live Emacs API", () => {
 		request,
 	}) => {
 		const res = await request.get(
-			`http://localhost:${EMACS_PORT}/api/node/math-linear-algebra.json`,
+			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/math-linear-algebra.json`,
 		);
 		expect(res.status()).toBe(200);
 		const node = (await res.json()) as {
@@ -203,7 +204,7 @@ test.describe("Live Emacs API", () => {
 		request,
 	}) => {
 		const res = await request.get(
-			`http://localhost:${EMACS_PORT}/api/node/prog-algorithms.json`,
+			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/prog-algorithms.json`,
 		);
 		expect(res.status()).toBe(200);
 		const node = (await res.json()) as {
@@ -216,7 +217,7 @@ test.describe("Live Emacs API", () => {
 
 	test("node endpoint returns 404 for an unknown ID", async ({ request }) => {
 		const res = await request.get(
-			`http://localhost:${EMACS_PORT}/api/node/nonexistent-id-xyz.json`,
+			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/nonexistent-id-xyz.json`,
 		);
 		expect(res.status()).toBe(404);
 	});
@@ -227,7 +228,7 @@ test.describe("Live Emacs API", () => {
 		request,
 	}) => {
 		const res = await request.get(
-			`http://localhost:${EMACS_PORT}/api/node/sci-biology/Li9pbWcvdGVzdA.png`,
+			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/sci-biology/Li9pbWcvdGVzdA.png`,
 		);
 		expect(res.status()).toBe(200);
 		const ct = res.headers()["content-type"] ?? "";
@@ -236,7 +237,7 @@ test.describe("Live Emacs API", () => {
 
 	test("asset endpoint returns 404 for unknown image", async ({ request }) => {
 		const res = await request.get(
-			`http://localhost:${EMACS_PORT}/api/node/sci-biology/bm9uZXhpc3RlbnQ.png`,
+			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/sci-biology/bm9uZXhpc3RlbnQ.png`,
 		);
 		expect(res.status()).toBe(404);
 	});

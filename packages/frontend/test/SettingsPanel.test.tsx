@@ -21,6 +21,7 @@ describe("SettingsPanel", () => {
 				labelScale={1}
 				showLabels={true}
 				chargeStrength={-120}
+				followEmacs={false}
 				onThemeChange={handleChange}
 				onRendererChange={handleChange}
 				onLayoutChange={handleChange}
@@ -28,6 +29,7 @@ describe("SettingsPanel", () => {
 				onLabelScaleChange={handleChange}
 				onShowLabelsChange={handleChange}
 				onChargeStrengthChange={handleChange}
+				onFollowEmacsChange={handleChange}
 				onClose={handleClose}
 			/>,
 		);

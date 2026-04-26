@@ -120,6 +120,62 @@
                                (org-node-ui-lite--entry-raw entry))))))
       (delete-file tmpfile))))
 
+;;;; org-node-ui-lite--track-current-node
+
+(ert-deftest org-node-ui-lite--track-current-node/sets-id-in-org-buffer ()
+  "Sets the variable to the ID of the current heading."
+  (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) t))
+            ((symbol-function 'org-entry-get)   (lambda (_pom prop) (when (equal prop "ID") "abc-123"))))
+    (let ((org-node-ui-lite--current-node-id nil))
+      (org-node-ui-lite--track-current-node)
+      (should (string= "abc-123" org-node-ui-lite--current-node-id)))))
+
+(ert-deftest org-node-ui-lite--track-current-node/sets-nil-outside-org ()
+  "Resets the variable to nil when not in an Org buffer."
+  (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) nil)))
+    (let ((org-node-ui-lite--current-node-id "stale-id"))
+      (org-node-ui-lite--track-current-node)
+      (should (null org-node-ui-lite--current-node-id)))))
+
+(ert-deftest org-node-ui-lite--track-current-node/sets-nil-when-heading-has-no-id ()
+  "Resets the variable to nil when the heading has no :ID: property."
+  (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) t))
+            ((symbol-function 'org-entry-get)   (lambda (_pom _prop) nil)))
+    (let ((org-node-ui-lite--current-node-id "stale-id"))
+      (org-node-ui-lite--track-current-node)
+      (should (null org-node-ui-lite--current-node-id)))))
+
+;;;; org-node-ui-lite-select-current
+
+(ert-deftest org-node-ui-lite-select-current/increments-seq-and-sets-id ()
+  "Increments the explicit-seq counter and updates the current node ID."
+  (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) t))
+            ((symbol-function 'org-entry-get)   (lambda (_pom prop) (when (equal prop "ID") "node-42"))))
+    (let ((org-node-ui-lite--current-node-id nil)
+          (org-node-ui-lite--explicit-seq 0))
+      (org-node-ui-lite-select-current)
+      (should (string= "node-42" org-node-ui-lite--current-node-id))
+      (should (= 1 org-node-ui-lite--explicit-seq)))))
+
+(ert-deftest org-node-ui-lite-select-current/does-nothing-outside-org ()
+  "Does not change seq or id when not in an Org buffer."
+  (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) nil)))
+    (let ((org-node-ui-lite--current-node-id "existing-id")
+          (org-node-ui-lite--explicit-seq 5))
+      (org-node-ui-lite-select-current)
+      (should (string= "existing-id" org-node-ui-lite--current-node-id))
+      (should (= 5 org-node-ui-lite--explicit-seq)))))
+
+(ert-deftest org-node-ui-lite-select-current/does-nothing-when-no-id-at-point ()
+  "Does not change seq or id when the heading has no :ID: property."
+  (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) t))
+            ((symbol-function 'org-entry-get)   (lambda (_pom _prop) nil)))
+    (let ((org-node-ui-lite--current-node-id "existing-id")
+          (org-node-ui-lite--explicit-seq 3))
+      (org-node-ui-lite-select-current)
+      (should (string= "existing-id" org-node-ui-lite--current-node-id))
+      (should (= 3 org-node-ui-lite--explicit-seq)))))
+
 ;;;; org-node-ui-lite--build-and-start
 
 (ert-deftest org-node-ui-lite--build-and-start/process-runs-in-repo-root ()
