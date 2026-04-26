@@ -41,6 +41,7 @@
 
 (require 'cl-lib)
 (require 'json)
+(require 'org)
 (require 'simple-httpd)
 (require 'org-mem)
 (require 'org-node)
@@ -146,7 +147,7 @@ The front-end uses this to detect explicit selection requests.")
   "Update `org-node-ui-lite--current-node-id' based on point in the active buffer."
   (setq org-node-ui-lite--current-node-id
         (when (derived-mode-p 'org-mode)
-          (ignore-errors (org-entry-get nil "ID")))))
+          (ignore-errors (org-entry-get-with-inheritance "ID")))))
 
 ;;;###autoload
 (defun org-node-ui-lite-select-current ()
@@ -154,7 +155,7 @@ The front-end uses this to detect explicit selection requests.")
 Works regardless of whether follow-mode is enabled in the browser."
   (interactive)
   (let ((id (when (derived-mode-p 'org-mode)
-              (ignore-errors (org-entry-get nil "ID")))))
+              (ignore-errors (org-entry-get-with-inheritance "ID")))))
     (if id
         (progn
           (setq org-node-ui-lite--current-node-id id)
