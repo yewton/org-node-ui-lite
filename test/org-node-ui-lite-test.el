@@ -188,5 +188,36 @@
         (org-node-ui-lite--build-and-start "/usr/bin/npm" "/repo/root/")))
     (should (string= "/repo/root/" proc-dir))))
 
+;;;; org-node-ui-lite-rebuild-frontend
+
+(ert-deftest org-node-ui-lite-rebuild-frontend/calls-build-and-start ()
+  "Passes npm path and repo root to --build-and-start."
+  (let (captured-npm captured-root)
+    (cl-letf (((symbol-function 'executable-find) (lambda (_) "/usr/bin/npm"))
+              ((symbol-function 'org-node-ui-lite--build-and-start)
+               (lambda (npm root)
+                 (setq captured-npm npm captured-root root))))
+      (org-node-ui-lite-rebuild-frontend)
+      (should (string= "/usr/bin/npm" captured-npm))
+      (should (string= (file-name-directory org-node-ui-lite--this-file)
+                       captured-root)))))
+
+(ert-deftest org-node-ui-lite-rebuild-frontend/signals-user-error-when-npm-missing ()
+  "Raises user-error when npm is not found on PATH."
+  (cl-letf (((symbol-function 'executable-find) (lambda (_) nil)))
+    (should-error (org-node-ui-lite-rebuild-frontend) :type 'user-error)))
+
+(ert-deftest org-node-ui-lite-rebuild-frontend/kills-running-build-first ()
+  "Kills any in-progress build before starting a new one."
+  (let (kill-called)
+    (cl-letf (((symbol-function 'executable-find) (lambda (_) "/usr/bin/npm"))
+              ((symbol-function 'process-live-p) (lambda (_) t))
+              ((symbol-function 'kill-process) (lambda (_) (setq kill-called t)))
+              ((symbol-function 'org-node-ui-lite--build-and-start) #'ignore))
+      (let ((org-node-ui-lite--build-process 'fake-proc))
+        (org-node-ui-lite-rebuild-frontend)
+        (should kill-called)
+        (should (null org-node-ui-lite--build-process))))))
+
 (provide 'org-node-ui-lite-test)
 ;;; org-node-ui-lite-test.el ends here

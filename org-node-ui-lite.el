@@ -26,6 +26,10 @@
 ;;   M-x org-node-ui-lite-select-current
 ;;       Select the org-node at point in the WebUI regardless of follow-mode.
 ;;
+;;   M-x org-node-ui-lite-rebuild-frontend
+;;       Force a fresh rebuild of the front-end, even if dist/ already exists.
+;;       Use this after updating the codebase to avoid a stale front-end.
+;;
 ;; QUICK START
 ;;   In init.el:
 ;;     (add-to-list 'load-path "/path/to/org-node-ui-lite")
@@ -329,6 +333,25 @@ and the build output is shown."
                  (display-buffer (get-buffer "*org-node-ui-lite-build*"))
                  (message (concat "org-node-ui-lite: Build failed — "
                                   "see buffer *org-node-ui-lite-build*")))))))))
+
+;;;###autoload
+(defun org-node-ui-lite-rebuild-frontend ()
+  "Force a fresh rebuild of the front-end, even if dist/ already exists.
+Use this after updating the codebase to avoid running a stale front-end
+alongside a newer backend.  Any in-progress build is cancelled first.
+When the build succeeds and `org-node-ui-lite-mode' is active, the HTTP
+server is restarted automatically."
+  (interactive)
+  (let* ((root (file-name-directory org-node-ui-lite--this-file))
+         (npm  (executable-find "npm")))
+    (unless npm
+      (user-error
+       "org-node-ui-lite: `npm' not found; build manually: cd %s && npm install && npm run build"
+       root))
+    (when (process-live-p org-node-ui-lite--build-process)
+      (kill-process org-node-ui-lite--build-process)
+      (setq org-node-ui-lite--build-process nil))
+    (org-node-ui-lite--build-and-start npm root)))
 
 (provide 'org-node-ui-lite)
 ;;; org-node-ui-lite.el ends here
