@@ -139,9 +139,8 @@ the full file from disk."
   "ID of the org-node at point in the active window, or nil.")
 
 (defvar org-node-ui-lite--explicit-seq 0
-  "Sequence counter incremented each time `org-node-ui-lite-select-current' is called.
-The front-end watches this value to distinguish an explicit selection request
-from ordinary cursor movement.")
+  "Counter incremented by `org-node-ui-lite-select-current'.
+The front-end uses this to detect explicit selection requests.")
 
 (defun org-node-ui-lite--track-current-node ()
   "Update `org-node-ui-lite--current-node-id' based on point in the active buffer."
