@@ -6,6 +6,7 @@ import { GlobalStyles } from "./components/ui/GlobalStyles.tsx";
 import type { Layout, Renderer, Theme } from "./graph/graph-types.ts";
 import { Layouts, Renderers, Themes } from "./graph/graph-types.ts";
 import { useDetailsPanel } from "./hooks/useDetailsPanel.ts";
+import { useEmacsSync } from "./hooks/useEmacsSync.ts";
 import { useGraphManager } from "./hooks/useGraphManager.ts";
 import { useUiDispatch, useUiState } from "./store/hooks.ts";
 
@@ -46,6 +47,8 @@ function App() {
 		showLabels,
 		chargeStrength,
 	});
+
+	useEmacsSync(openNodeAction);
 
 	// Expose openNodeAction for the screenshot test suite (dev builds only).
 	if (import.meta.env.DEV) {

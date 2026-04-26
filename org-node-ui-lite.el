@@ -128,7 +128,23 @@ the full file from disk."
   (httpd-send-header proc "application/json; charset=utf-8" (or status 200)
                      :Access-Control-Allow-Origin "*"))
 
+;;;; Cursor tracking
+
+(defvar org-node-ui-lite--current-node-id nil
+  "ID of the org-node at point in the active window, or nil.")
+
+(defun org-node-ui-lite--track-current-node ()
+  "Update `org-node-ui-lite--current-node-id' based on point in the active buffer."
+  (setq org-node-ui-lite--current-node-id
+        (when (derived-mode-p 'org-mode)
+          (ignore-errors (org-entry-get nil "ID")))))
+
 ;;;; Servlets
+
+(defservlet* api/current-node.json text/plain ()
+  (org-node-ui-lite--send-json
+   httpd-current-proc
+   `((id . ,org-node-ui-lite--current-node-id))))
 
 (defservlet* api/graph.json text/plain ()
   (org-node-ui-lite--send-json
@@ -225,6 +241,7 @@ runs automatically in the background.  When `npm' cannot be found a
       (setq org-node-ui-lite--build-process nil))
     (condition-case err
         (progn
+          (add-hook 'post-command-hook #'org-node-ui-lite--track-current-node)
           (org-node-ui-lite--check-prerequisites)
           (if (org-node-ui-lite--dist-p)
               (org-node-ui-lite--start-server)
@@ -241,6 +258,8 @@ build manually: cd %s && npm install && npm run build"
        (org-node-ui-lite-mode -1)
        (signal (car err) (cdr err)))))
    (t
+    (remove-hook 'post-command-hook #'org-node-ui-lite--track-current-node)
+    (setq org-node-ui-lite--current-node-id nil)
     (when (process-live-p org-node-ui-lite--build-process)
       (kill-process org-node-ui-lite--build-process)
       (setq org-node-ui-lite--build-process nil))
