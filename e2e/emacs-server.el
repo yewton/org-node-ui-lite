@@ -58,5 +58,9 @@
 
 ;; Keep Emacs alive so the HTTP server continues to handle requests.
 ;; accept-process-output processes network I/O and async scan callbacks.
+;; condition-case prevents async errors (e.g. from org-mem scan callbacks)
+;; from terminating the batch process before Playwright teardown sends SIGTERM.
 (while t
-  (accept-process-output nil 1))
+  (condition-case err
+      (accept-process-output nil 1)
+    (error (message "e2e: non-fatal error in event loop: %S" err))))
