@@ -66,7 +66,7 @@
 ;; it so Playwright can still reach the API endpoints.
 (while t
   (condition-case err
-      (accept-process-output nil 1)
+      (accept-process-output nil 0.2)
     (error (message "e2e: non-fatal error in event loop: %S" err)))
   (unless (httpd-running-p)
     (message "e2e: httpd not running, restarting on port %d" httpd-port)

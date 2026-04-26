@@ -43,7 +43,7 @@ export default async function globalSetup() {
 	// response.  Waiting for a stable count gives those callbacks time to
 	// complete (and be caught by the event-loop error handler) before we
 	// hand control to Playwright.
-	const STABLE_POLLS_REQUIRED = 4; // 4 × 500 ms = 2 s of stability
+	const STABLE_POLLS_REQUIRED = 8; // 8 × 500 ms = 4 s of stability
 	const deadline = Date.now() + STARTUP_TIMEOUT_MS;
 	let ready = false;
 	let stablePolls = 0;
