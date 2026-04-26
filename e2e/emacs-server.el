@@ -64,10 +64,10 @@
 (defun e2e/httpd-watchdog ()
   "Restart httpd if it stopped running."
   (unless (httpd-running-p)
-    (message "e2e: httpd not running, restarting on port %d" httpd-port)
+    (message "e2e: watchdog: httpd not running, restarting on port %d" httpd-port)
     (condition-case err
         (httpd-start)
-      (error (message "e2e: failed to restart httpd: %S" err)))))
+      (error (message "e2e: watchdog: failed to restart httpd: %S" err)))))
 
 (run-with-timer 0 0.1 #'e2e/httpd-watchdog)
 

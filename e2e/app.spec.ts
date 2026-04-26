@@ -145,18 +145,14 @@ test.describe("Details panel", () => {
 
 test.describe("Live Emacs API", () => {
 	test("graph endpoint returns 30 nodes", async ({ request }) => {
-		const res = await request.get(
-			`http://${EMACS_HOST}:${EMACS_PORT}/api/graph.json`,
-		);
+		const res = await request.get("/api/graph.json");
 		expect(res.status()).toBe(200);
 		const data = (await res.json()) as { nodes: { id: string }[] };
 		expect(data.nodes).toHaveLength(30);
 	});
 
 	test("graph endpoint returns 31 edges", async ({ request }) => {
-		const res = await request.get(
-			`http://${EMACS_HOST}:${EMACS_PORT}/api/graph.json`,
-		);
+		const res = await request.get("/api/graph.json");
 		expect(res.status()).toBe(200);
 		const data = (await res.json()) as {
 			edges: { source: string; dest: string }[];
@@ -167,9 +163,7 @@ test.describe("Live Emacs API", () => {
 	test("every edge references a node that exists in the graph", async ({
 		request,
 	}) => {
-		const res = await request.get(
-			`http://${EMACS_HOST}:${EMACS_PORT}/api/graph.json`,
-		);
+		const res = await request.get("/api/graph.json");
 		const data = (await res.json()) as {
 			nodes: { id: string }[];
 			edges: { source: string; dest: string }[];
@@ -184,9 +178,7 @@ test.describe("Live Emacs API", () => {
 	test("node endpoint returns details for math-linear-algebra", async ({
 		request,
 	}) => {
-		const res = await request.get(
-			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/math-linear-algebra.json`,
-		);
+		const res = await request.get("/api/node/math-linear-algebra.json");
 		expect(res.status()).toBe(200);
 		const node = (await res.json()) as {
 			id: string;
@@ -203,9 +195,7 @@ test.describe("Live Emacs API", () => {
 	test("node endpoint returns backlinks for prog-algorithms", async ({
 		request,
 	}) => {
-		const res = await request.get(
-			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/prog-algorithms.json`,
-		);
+		const res = await request.get("/api/node/prog-algorithms.json");
 		expect(res.status()).toBe(200);
 		const node = (await res.json()) as {
 			backlinks: { source: string; title: string }[];
@@ -216,9 +206,7 @@ test.describe("Live Emacs API", () => {
 	});
 
 	test("node endpoint returns 404 for an unknown ID", async ({ request }) => {
-		const res = await request.get(
-			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/nonexistent-id-xyz.json`,
-		);
+		const res = await request.get("/api/node/nonexistent-id-xyz.json");
 		expect(res.status()).toBe(404);
 	});
 
@@ -227,18 +215,14 @@ test.describe("Live Emacs API", () => {
 	test("asset endpoint serves image for sci-biology node", async ({
 		request,
 	}) => {
-		const res = await request.get(
-			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/sci-biology/Li9pbWcvdGVzdA.png`,
-		);
+		const res = await request.get("/api/node/sci-biology/Li9pbWcvdGVzdA.png");
 		expect(res.status()).toBe(200);
 		const ct = res.headers()["content-type"] ?? "";
 		expect(ct).toMatch(/image\//);
 	});
 
 	test("asset endpoint returns 404 for unknown image", async ({ request }) => {
-		const res = await request.get(
-			`http://${EMACS_HOST}:${EMACS_PORT}/api/node/sci-biology/bm9uZXhpc3RlbnQ.png`,
-		);
+		const res = await request.get("/api/node/sci-biology/bm9uZXhpc3RlbnQ.png");
 		expect(res.status()).toBe(404);
 	});
 });

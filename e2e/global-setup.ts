@@ -43,7 +43,7 @@ export default async function globalSetup() {
 	// response.  Waiting for a stable count gives those callbacks time to
 	// complete (and be caught by the event-loop error handler) before we
 	// hand control to Playwright.
-	const STABLE_POLLS_REQUIRED = 8; // 8 × 500 ms = 4 s of stability
+	const STABLE_POLLS_REQUIRED = 20; // 20 × 500 ms = 10 s of stability
 	const deadline = Date.now() + STARTUP_TIMEOUT_MS;
 	let ready = false;
 	let stablePolls = 0;
@@ -57,11 +57,19 @@ export default async function globalSetup() {
 				const count = data.nodes?.length ?? 0;
 				if (count > 0 && count === lastCount) {
 					stablePolls++;
+					if (stablePolls % 5 === 0) {
+						console.log(
+							`[e2e] Emacs stability: ${stablePolls}/${STABLE_POLLS_REQUIRED} (count=${count})`,
+						);
+					}
 					if (stablePolls >= STABLE_POLLS_REQUIRED) {
 						ready = true;
 						break;
 					}
 				} else {
+					if (count > 0) {
+						console.log(`[e2e] Emacs count changed: ${lastCount} -> ${count}`);
+					}
 					stablePolls = 0;
 					lastCount = count;
 				}
