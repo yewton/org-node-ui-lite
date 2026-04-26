@@ -33,7 +33,7 @@ is used as-is. Many thanks to Masaya Taniguchi for the original work.
 
 ## Prerequisites
 
-- Emacs 29.1 or later
+- Emacs 29.4 or later
 - [`org-mem`](https://github.com/meedstrom/org-mem) ≥ 0.34 installed and
   `org-mem-updater-mode` enabled
 - [`org-node`](https://github.com/meedstrom/org-node) ≥ 1.0 installed
