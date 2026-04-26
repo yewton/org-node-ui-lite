@@ -113,6 +113,20 @@ is on (polled every 2 s).
 
 The full schema is defined in [`openapi.yaml`](openapi.yaml).
 
+## Rebuilding the frontend
+
+If you update the repository (e.g. `git pull`), the pre-built `dist/` directory
+is not automatically refreshed — the mode only builds the frontend on first run
+when `dist/` is absent.  To force a fresh build after an update, run:
+
+```
+M-x org-node-ui-lite-rebuild-frontend
+```
+
+This cancels any in-progress build, runs `npm install && npm run build`, and
+restarts the HTTP server when done.  A `user-error` is raised if `npm` is not
+found on `PATH`.
+
 ## Known limitations
 
 - No real-time graph updates; reload the browser to reflect org file changes.
