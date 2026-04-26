@@ -21,6 +21,7 @@ function App() {
 		labelScale,
 		showLabels,
 		chargeStrength,
+		followEmacs,
 		settingsOpen,
 		detailsOpen,
 		selected,
@@ -48,7 +49,7 @@ function App() {
 		chargeStrength,
 	});
 
-	useEmacsSync(openNodeAction);
+	useEmacsSync(openNodeAction, followEmacs);
 
 	// Expose openNodeAction for the screenshot test suite (dev builds only).
 	if (import.meta.env.DEV) {
@@ -97,6 +98,10 @@ function App() {
 		dispatch({ type: "SET_STATE", payload: { chargeStrength: s } });
 	};
 
+	const handleFollowEmacsChange = (follow: boolean) => {
+		dispatch({ type: "SET_STATE", payload: { followEmacs: follow } });
+	};
+
 	return (
 		<div className="vh-100 vw-100">
 			<GlobalStyles />
@@ -114,6 +119,7 @@ function App() {
 				labelScale={labelScale}
 				showLabels={showLabels}
 				chargeStrength={chargeStrength}
+				followEmacs={followEmacs}
 				onThemeChange={handleThemeChange}
 				onRendererChange={handleRendererChange}
 				onLayoutChange={handleLayoutChange}
@@ -121,6 +127,7 @@ function App() {
 				onLabelScaleChange={handleLabelScaleChange}
 				onShowLabelsChange={handleShowLabelsChange}
 				onChargeStrengthChange={handleChargeStrengthChange}
+				onFollowEmacsChange={handleFollowEmacsChange}
 				onClose={() => dispatch({ type: "TOGGLE_SETTINGS" })}
 			/>
 

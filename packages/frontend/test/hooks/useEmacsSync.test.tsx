@@ -32,57 +32,118 @@ describe("useEmacsSync", () => {
 		vi.useRealTimers();
 	});
 
-	it("calls onNodeChange when Emacs reports a new node ID", async () => {
-		mockGet.mockResolvedValue({ data: { id: "node-abc" } });
-		const onNodeChange = vi.fn();
+	describe("explicit selection (seq)", () => {
+		it("selects the node when seq increments, regardless of followEnabled", async () => {
+			mockGet.mockResolvedValue({ data: { id: "node-abc", seq: 1 } });
+			const onNodeChange = vi.fn();
 
-		renderHook(() => useEmacsSync(onNodeChange));
-		await flushInitialPoll();
+			renderHook(() => useEmacsSync(onNodeChange, false));
+			await flushInitialPoll();
 
-		expect(onNodeChange).toHaveBeenCalledWith("node-abc");
+			expect(onNodeChange).toHaveBeenCalledWith("node-abc");
+		});
+
+		it("does not fire again if seq stays the same on next poll", async () => {
+			mockGet.mockResolvedValue({ data: { id: "node-abc", seq: 1 } });
+			const onNodeChange = vi.fn();
+
+			renderHook(() => useEmacsSync(onNodeChange, false));
+			await flushInitialPoll();
+			await advanceInterval();
+
+			expect(onNodeChange).toHaveBeenCalledTimes(1);
+		});
+
+		it("fires again when seq increments a second time", async () => {
+			mockGet
+				.mockResolvedValueOnce({ data: { id: "node-abc", seq: 1 } })
+				.mockResolvedValueOnce({ data: { id: "node-abc", seq: 2 } });
+			const onNodeChange = vi.fn();
+
+			renderHook(() => useEmacsSync(onNodeChange, false));
+			await flushInitialPoll();
+			await advanceInterval();
+
+			expect(onNodeChange).toHaveBeenCalledTimes(2);
+		});
+
+		it("does not fire when seq is 0 and follow is off", async () => {
+			mockGet.mockResolvedValue({ data: { id: "node-abc", seq: 0 } });
+			const onNodeChange = vi.fn();
+
+			renderHook(() => useEmacsSync(onNodeChange, false));
+			await flushInitialPoll();
+
+			expect(onNodeChange).not.toHaveBeenCalled();
+		});
 	});
 
-	it("does not call onNodeChange when the node ID is null", async () => {
-		mockGet.mockResolvedValue({ data: { id: null } });
-		const onNodeChange = vi.fn();
+	describe("follow mode", () => {
+		it("selects the node when follow is on and cursor moves to a new node", async () => {
+			mockGet.mockResolvedValue({ data: { id: "node-xyz", seq: 0 } });
+			const onNodeChange = vi.fn();
 
-		renderHook(() => useEmacsSync(onNodeChange));
-		await flushInitialPoll();
+			renderHook(() => useEmacsSync(onNodeChange, true));
+			await flushInitialPoll();
 
-		expect(onNodeChange).not.toHaveBeenCalled();
-	});
+			expect(onNodeChange).toHaveBeenCalledWith("node-xyz");
+		});
 
-	it("does not call onNodeChange again when the same ID is returned", async () => {
-		mockGet.mockResolvedValue({ data: { id: "same-id" } });
-		const onNodeChange = vi.fn();
+		it("does not fire for the same node ID on repeated polls", async () => {
+			mockGet.mockResolvedValue({ data: { id: "same-id", seq: 0 } });
+			const onNodeChange = vi.fn();
 
-		renderHook(() => useEmacsSync(onNodeChange));
-		await flushInitialPoll();
-		await advanceInterval();
+			renderHook(() => useEmacsSync(onNodeChange, true));
+			await flushInitialPoll();
+			await advanceInterval();
 
-		expect(onNodeChange).toHaveBeenCalledTimes(1);
-	});
+			expect(onNodeChange).toHaveBeenCalledTimes(1);
+		});
 
-	it("calls onNodeChange again when the ID changes", async () => {
-		mockGet
-			.mockResolvedValueOnce({ data: { id: "first-id" } })
-			.mockResolvedValueOnce({ data: { id: "second-id" } });
-		const onNodeChange = vi.fn();
+		it("fires again when cursor moves to a different node", async () => {
+			mockGet
+				.mockResolvedValueOnce({ data: { id: "first-id", seq: 0 } })
+				.mockResolvedValueOnce({ data: { id: "second-id", seq: 0 } });
+			const onNodeChange = vi.fn();
 
-		renderHook(() => useEmacsSync(onNodeChange));
-		await flushInitialPoll();
-		await advanceInterval();
+			renderHook(() => useEmacsSync(onNodeChange, true));
+			await flushInitialPoll();
+			await advanceInterval();
 
-		expect(onNodeChange).toHaveBeenCalledTimes(2);
-		expect(onNodeChange).toHaveBeenNthCalledWith(1, "first-id");
-		expect(onNodeChange).toHaveBeenNthCalledWith(2, "second-id");
+			expect(onNodeChange).toHaveBeenCalledTimes(2);
+			expect(onNodeChange).toHaveBeenNthCalledWith(1, "first-id");
+			expect(onNodeChange).toHaveBeenNthCalledWith(2, "second-id");
+		});
+
+		it("does not fire when follow is off, even if cursor moves", async () => {
+			mockGet
+				.mockResolvedValueOnce({ data: { id: "first-id", seq: 0 } })
+				.mockResolvedValueOnce({ data: { id: "second-id", seq: 0 } });
+			const onNodeChange = vi.fn();
+
+			renderHook(() => useEmacsSync(onNodeChange, false));
+			await flushInitialPoll();
+			await advanceInterval();
+
+			expect(onNodeChange).not.toHaveBeenCalled();
+		});
+
+		it("does not fire when id is null", async () => {
+			mockGet.mockResolvedValue({ data: { id: null, seq: 0 } });
+			const onNodeChange = vi.fn();
+
+			renderHook(() => useEmacsSync(onNodeChange, true));
+			await flushInitialPoll();
+
+			expect(onNodeChange).not.toHaveBeenCalled();
+		});
 	});
 
 	it("ignores network errors silently", async () => {
 		mockGet.mockRejectedValue(new Error("Network error"));
 		const onNodeChange = vi.fn();
 
-		renderHook(() => useEmacsSync(onNodeChange));
+		renderHook(() => useEmacsSync(onNodeChange, false));
 		await flushInitialPoll();
 
 		expect(onNodeChange).not.toHaveBeenCalled();

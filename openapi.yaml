@@ -196,11 +196,21 @@ components:
 
     CurrentNode:
       type: object
-      required: [id]
+      required: [id, seq]
       properties:
         id:
           type: string
           nullable: true
+          description: >
+            ID of the org-node where the Emacs cursor currently resides, or
+            null when the cursor is outside an Org buffer or on a heading
+            without an :ID: property.
+        seq:
+          type: integer
+          description: >
+            Monotonically increasing counter, incremented each time the user
+            calls org-node-ui-lite-select-current.  The frontend uses this to
+            detect explicit selection requests regardless of follow-mode.
 
     Node:
       type: object

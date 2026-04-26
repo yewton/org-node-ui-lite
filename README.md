@@ -88,10 +88,25 @@ Open <http://localhost:5174/index.html>.
 (setq org-node-filter-fn #'my-filter)
 ```
 
+## Selecting nodes from Emacs
+
+### Explicit selection
+
+Call `M-x org-node-ui-lite-select-current` while the cursor is on any
+org-node heading to immediately select and highlight that node in the WebUI.
+This works regardless of whether follow-mode is enabled.
+
+### Follow mode
+
+Open the Settings panel in the WebUI and enable **Follow Emacs**.  While
+active, the WebUI automatically selects whichever org-node the Emacs cursor
+is on (polled every 2 s).
+
 ## API
 
 | Endpoint | Description |
 |---|---|
+| `GET /api/current-node.json` | Cursor position `{id, seq}` for follow-mode |
 | `GET /api/graph.json` | All nodes and edges |
 | `GET /api/node/{id}.json` | Single node: title, raw Org text, backlinks |
 | `GET /api/node/{id}/{path}` | Binary asset (Base64url-encoded filename) |
@@ -101,7 +116,6 @@ The full schema is defined in [`openapi.yaml`](openapi.yaml).
 ## Known limitations
 
 - No real-time graph updates; reload the browser to reflect org file changes.
-- follow-mode (cursor tracking) is not implemented (planned for v0.2).
 - Read-only: node creation and deletion are out of scope.
 
 ## Licence

@@ -22,6 +22,7 @@ interface SettingsPanelProps {
 	labelScale: number;
 	showLabels: boolean;
 	chargeStrength: number;
+	followEmacs: boolean;
 	onThemeChange: (theme: Theme) => void;
 	onRendererChange: (renderer: Renderer) => void;
 	onLayoutChange: (layout: Layout) => void;
@@ -29,6 +30,7 @@ interface SettingsPanelProps {
 	onLabelScaleChange: (scale: number) => void;
 	onShowLabelsChange: (show: boolean) => void;
 	onChargeStrengthChange: (strength: number) => void;
+	onFollowEmacsChange: (follow: boolean) => void;
 	onClose: () => void;
 }
 
@@ -44,6 +46,7 @@ export function SettingsPanel({
 	labelScale,
 	showLabels,
 	chargeStrength,
+	followEmacs,
 	onThemeChange,
 	onRendererChange,
 	onLayoutChange,
@@ -51,11 +54,13 @@ export function SettingsPanel({
 	onLabelScaleChange,
 	onShowLabelsChange,
 	onChargeStrengthChange,
+	onFollowEmacsChange,
 	onClose,
 }: SettingsPanelProps) {
 	const panelId = useId();
 	const labelId = useId();
 	const showLabelsSwitchId = useId();
+	const followEmacsSwitchId = useId();
 
 	return (
 		<div
@@ -72,6 +77,17 @@ export function SettingsPanel({
 				<Button variant="close" aria-label="Close" onClick={onClose} />
 			</div>
 			<div className="offcanvas-body">
+				<FormGroup label="Follow Emacs">
+					<Switch
+						id={followEmacsSwitchId}
+						checked={followEmacs}
+						onChange={onFollowEmacsChange}
+						label="Track cursor position"
+					/>
+				</FormGroup>
+
+				<hr />
+
 				<FormGroup label="Theme">
 					<Select
 						value={theme}

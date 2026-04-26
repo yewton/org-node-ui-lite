@@ -17,9 +17,14 @@
 ;; front-end (compiled to packages/frontend/dist/).
 ;;
 ;; ENDPOINTS
+;;   GET /api/current-node.json → cursor position {id, seq} for follow-mode
 ;;   GET /api/graph.json        → all nodes + edges
 ;;   GET /api/node/<id>.json    → single node, backlinks, raw Org text
 ;;   GET /api/node/<id>/<path>  → binary asset (Base64url-encoded filename)
+;;
+;; INTERACTIVE COMMANDS
+;;   M-x org-node-ui-lite-select-current
+;;       Select the org-node at point in the WebUI regardless of follow-mode.
 ;;
 ;; QUICK START
 ;;   In init.el:
@@ -128,10 +133,15 @@ the full file from disk."
   (httpd-send-header proc "application/json; charset=utf-8" (or status 200)
                      :Access-Control-Allow-Origin "*"))
 
-;;;; Cursor tracking
+;;;; Cursor tracking and explicit selection
 
 (defvar org-node-ui-lite--current-node-id nil
   "ID of the org-node at point in the active window, or nil.")
+
+(defvar org-node-ui-lite--explicit-seq 0
+  "Sequence counter incremented each time `org-node-ui-lite-select-current' is called.
+The front-end watches this value to distinguish an explicit selection request
+from ordinary cursor movement.")
 
 (defun org-node-ui-lite--track-current-node ()
   "Update `org-node-ui-lite--current-node-id' based on point in the active buffer."
@@ -139,12 +149,27 @@ the full file from disk."
         (when (derived-mode-p 'org-mode)
           (ignore-errors (org-entry-get nil "ID")))))
 
+;;;###autoload
+(defun org-node-ui-lite-select-current ()
+  "Select the org-node at point in the WebUI.
+Works regardless of whether follow-mode is enabled in the browser."
+  (interactive)
+  (let ((id (when (derived-mode-p 'org-mode)
+              (ignore-errors (org-entry-get nil "ID")))))
+    (if id
+        (progn
+          (setq org-node-ui-lite--current-node-id id)
+          (cl-incf org-node-ui-lite--explicit-seq)
+          (message "org-node-ui-lite: selecting node in WebUI"))
+      (message "org-node-ui-lite: no org-node at point"))))
+
 ;;;; Servlets
 
 (defservlet* api/current-node.json text/plain ()
   (org-node-ui-lite--send-json
    httpd-current-proc
-   `((id . ,org-node-ui-lite--current-node-id))))
+   `((id  . ,org-node-ui-lite--current-node-id)
+     (seq . ,org-node-ui-lite--explicit-seq))))
 
 (defservlet* api/graph.json text/plain ()
   (org-node-ui-lite--send-json
@@ -259,7 +284,8 @@ build manually: cd %s && npm install && npm run build"
        (signal (car err) (cdr err)))))
    (t
     (remove-hook 'post-command-hook #'org-node-ui-lite--track-current-node)
-    (setq org-node-ui-lite--current-node-id nil)
+    (setq org-node-ui-lite--current-node-id nil
+          org-node-ui-lite--explicit-seq 0)
     (when (process-live-p org-node-ui-lite--build-process)
       (kill-process org-node-ui-lite--build-process)
       (setq org-node-ui-lite--build-process nil))

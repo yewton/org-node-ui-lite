@@ -304,6 +304,7 @@ export interface components {
 	schemas: {
 		CurrentNode: {
 			id: string | null;
+			seq: number;
 		};
 		Graph: {
 			nodes: components["schemas"]["NodeSummary"][];
