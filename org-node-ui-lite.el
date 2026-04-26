@@ -7,7 +7,7 @@
 ;; Author: yewton
 ;; URL: https://github.com/yewton/org-node-ui-lite
 ;; Package-Version: 0.1.0
-;; Package-Requires: ((emacs "29.1") (org-mem "0.34") (org-node "1.0") (simple-httpd "1.5.1"))
+;; Package-Requires: ((emacs "29.4") (org-mem "0.34") (org-node "1.0") (simple-httpd "1.5.1"))
 ;; Keywords: hypermedia, tools, org
 
 ;; This file is NOT part of GNU Emacs.

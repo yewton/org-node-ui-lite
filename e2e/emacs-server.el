@@ -58,5 +58,18 @@
 
 ;; Keep Emacs alive so the HTTP server continues to handle requests.
 ;; accept-process-output processes network I/O and async scan callbacks.
+;; condition-case prevents async errors (e.g. from org-mem scan callbacks)
+;; from terminating the batch process before Playwright teardown sends SIGTERM.
+;;
+;; After each tick, check whether the httpd network process is still alive.
+;; If it died (e.g. because an error in its process filter closed it), restart
+;; it so Playwright can still reach the API endpoints.
 (while t
-  (accept-process-output nil 1))
+  (condition-case err
+      (accept-process-output nil 1)
+    (error (message "e2e: non-fatal error in event loop: %S" err)))
+  (unless (httpd-running-p)
+    (message "e2e: httpd not running, restarting on port %d" httpd-port)
+    (condition-case restart-err
+        (httpd-start)
+      (error (message "e2e: failed to restart httpd: %S" restart-err)))))
