@@ -37,22 +37,40 @@ export default async function globalSetup() {
 	// Save PID for teardown.
 	writeFileSync(pidFile, String(emacs.pid ?? ""));
 
-	// Poll until the graph API responds with at least one node.
+	// Poll until the graph API responds with at least one node, then wait for
+	// the count to stabilise.  On Emacs 30.x, org-mem's async post-scan
+	// callbacks can error and kill httpd shortly after the first non-empty
+	// response.  Waiting for a stable count gives those callbacks time to
+	// complete (and be caught by the event-loop error handler) before we
+	// hand control to Playwright.
+	const STABLE_POLLS_REQUIRED = 4; // 4 × 500 ms = 2 s of stability
 	const deadline = Date.now() + STARTUP_TIMEOUT_MS;
 	let ready = false;
+	let stablePolls = 0;
+	let lastCount = 0;
 
 	while (Date.now() < deadline) {
 		try {
 			const res = await fetch(`http://127.0.0.1:${EMACS_PORT}/api/graph.json`);
 			if (res.ok) {
 				const data = (await res.json()) as { nodes?: unknown[] };
-				if ((data.nodes?.length ?? 0) > 0) {
-					ready = true;
-					break;
+				const count = data.nodes?.length ?? 0;
+				if (count > 0 && count === lastCount) {
+					stablePolls++;
+					if (stablePolls >= STABLE_POLLS_REQUIRED) {
+						ready = true;
+						break;
+					}
+				} else {
+					stablePolls = 0;
+					lastCount = count;
 				}
+			} else {
+				stablePolls = 0;
 			}
 		} catch {
 			// Server not yet up — keep polling.
+			stablePolls = 0;
 		}
 		await new Promise<void>((r) => setTimeout(r, POLL_INTERVAL_MS));
 	}

@@ -68,8 +68,8 @@
   (condition-case err
       (accept-process-output nil 1)
     (error (message "e2e: non-fatal error in event loop: %S" err)))
-  (unless (process-live-p (get-process "httpd"))
-    (message "e2e: httpd process died, restarting on port %d" httpd-port)
+  (unless (httpd-running-p)
+    (message "e2e: httpd not running, restarting on port %d" httpd-port)
     (condition-case restart-err
         (httpd-start)
       (error (message "e2e: failed to restart httpd: %S" restart-err)))))
