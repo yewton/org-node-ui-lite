@@ -115,9 +115,13 @@ The full schema is defined in [`openapi.yaml`](openapi.yaml).
 
 ## Rebuilding the frontend
 
-If you update the repository (e.g. `git pull`), the pre-built `dist/` directory
-is not automatically refreshed — the mode only builds the frontend on first run
-when `dist/` is absent.  To force a fresh build after an update, run:
+`org-node-ui-lite-mode` automatically detects when the front-end source has
+changed since the last build (for example, after `git pull` updates the source
+files) and triggers a rebuild on the next startup.  No manual action is
+required in the normal case.
+
+If you need to force a rebuild regardless — for example, to recover from a
+corrupted `dist/` — use:
 
 ```
 M-x org-node-ui-lite-rebuild-frontend

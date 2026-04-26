@@ -232,6 +232,26 @@ Works regardless of whether follow-mode is enabled in the browser."
    (expand-file-name "packages/frontend/dist/index.html"
                      (file-name-directory org-node-ui-lite--this-file))))
 
+(defun org-node-ui-lite--read-hash-file (path)
+  "Return the trimmed contents of the hash file at PATH, or nil if absent."
+  (when (file-readable-p path)
+    (with-temp-buffer
+      (insert-file-contents path)
+      (string-trim (buffer-string)))))
+
+(defun org-node-ui-lite--frontend-stale-p (repo-root)
+  "Return non-nil when the built front-end does not match the source hash.
+Returns nil (not stale) when REPO-ROOT lacks a `.source-hash' file, so
+older checkouts without this feature are handled gracefully."
+  (let* ((source-hash
+          (org-node-ui-lite--read-hash-file
+           (expand-file-name "packages/frontend/.source-hash" repo-root)))
+         (build-hash
+          (org-node-ui-lite--read-hash-file
+           (expand-file-name "packages/frontend/dist/.build-hash" repo-root))))
+    (and source-hash
+         (not (equal source-hash build-hash)))))
+
 (defun org-node-ui-lite--check-prerequisites ()
   "Warn about soft issues; signal `user-error' for hard failures."
   (unless (bound-and-true-p org-mem-updater-mode)
@@ -272,17 +292,29 @@ runs automatically in the background.  When `npm' cannot be found a
         (progn
           (add-hook 'post-command-hook #'org-node-ui-lite--track-current-node)
           (org-node-ui-lite--check-prerequisites)
-          (if (org-node-ui-lite--dist-p)
-              (org-node-ui-lite--start-server)
-            ;; Front-end not built yet — try to build it automatically.
-            (let* ((root (file-name-directory org-node-ui-lite--this-file))
-                   (npm  (executable-find "npm")))
+          (let* ((root (file-name-directory org-node-ui-lite--this-file))
+                 (npm  (executable-find "npm")))
+            (cond
+             ;; dist/ absent: build from scratch.
+             ((not (org-node-ui-lite--dist-p))
               (if npm
                   (org-node-ui-lite--build-and-start npm root)
                 (user-error
                  "org-node-ui-lite: front-end not built and `npm' not found; \
 build manually: cd %s && npm install && npm run build"
-                 root)))))
+                 root)))
+             ;; dist/ present but stale: rebuild.
+             ((org-node-ui-lite--frontend-stale-p root)
+              (message "org-node-ui-lite: front-end is stale — rebuilding…")
+              (if npm
+                  (org-node-ui-lite--build-and-start npm root)
+                (user-error
+                 "org-node-ui-lite: front-end is stale and `npm' not found; \
+rebuild manually: cd %s && npm install && npm run build"
+                 root)))
+             ;; dist/ present and fresh: start immediately.
+             (t
+              (org-node-ui-lite--start-server)))))
       (error
        (org-node-ui-lite-mode -1)
        (signal (car err) (cdr err)))))
@@ -326,6 +358,13 @@ and the build output is shown."
                (if (string-match-p "finished" event)
                    (progn
                      (message "org-node-ui-lite: Build complete.")
+                     ;; Stamp the build so future startups can detect staleness.
+                     (condition-case nil
+                         (copy-file
+                          (expand-file-name "packages/frontend/.source-hash" repo-root)
+                          (expand-file-name "packages/frontend/dist/.build-hash" repo-root)
+                          t)
+                       (error nil))
                      ;; Only start if the user hasn't disabled the mode meanwhile.
                      (when org-node-ui-lite-mode
                        (org-node-ui-lite--start-server)))
