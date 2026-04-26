@@ -60,7 +60,16 @@
 ;; accept-process-output processes network I/O and async scan callbacks.
 ;; condition-case prevents async errors (e.g. from org-mem scan callbacks)
 ;; from terminating the batch process before Playwright teardown sends SIGTERM.
+;;
+;; After each tick, check whether the httpd network process is still alive.
+;; If it died (e.g. because an error in its process filter closed it), restart
+;; it so Playwright can still reach the API endpoints.
 (while t
   (condition-case err
       (accept-process-output nil 1)
-    (error (message "e2e: non-fatal error in event loop: %S" err))))
+    (error (message "e2e: non-fatal error in event loop: %S" err)))
+  (unless (process-live-p (get-process "httpd"))
+    (message "e2e: httpd process died, restarting on port %d" httpd-port)
+    (condition-case restart-err
+        (httpd-start)
+      (error (message "e2e: failed to restart httpd: %S" restart-err)))))
