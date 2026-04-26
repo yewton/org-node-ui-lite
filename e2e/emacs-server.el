@@ -3,8 +3,10 @@
 ;; Usage: emacs --batch --load e2e/emacs-server.el
 ;;
 ;; Sets org-mem-watch-dirs to e2e/fixtures/, enables org-mem-updater-mode and
-;; org-node-cache-mode per the documented setup, then starts the HTTP server.
-;; Runs an accept-process-output loop so the server stays alive.
+;; org-node-cache-mode per the documented quickstart, then starts the HTTP
+;; server.  A timer-based watchdog restarts httpd within 100 ms of a crash
+;; (org-mem async scan callbacks on Emacs 30.x can kill httpd).  The main
+;; accept-process-output loop keeps Emacs alive and processes network I/O.
 
 (defconst e2e/test-dir
   (file-name-directory (or load-file-name buffer-file-name))
@@ -54,22 +56,26 @@
 
 (message "e2e: org-node-ui-lite HTTP server listening on port %d" org-node-ui-lite-port)
 
-;;; Event loop ----------------------------------------------------------------
+;;; Watchdog timer ------------------------------------------------------------
 
-;; Keep Emacs alive so the HTTP server continues to handle requests.
-;; accept-process-output processes network I/O and async scan callbacks.
-;; condition-case prevents async errors (e.g. from org-mem scan callbacks)
-;; from terminating the batch process before Playwright teardown sends SIGTERM.
-;;
-;; After each tick, check whether the httpd network process is still alive.
-;; If it died (e.g. because an error in its process filter closed it), restart
-;; it so Playwright can still reach the API endpoints.
-(while t
-  (condition-case err
-      (accept-process-output nil 0.2)
-    (error (message "e2e: non-fatal error in event loop: %S" err)))
+;; A dedicated timer restarts httpd within 100 ms of a crash, independently
+;; of how long accept-process-output blocks in the main event loop below.
+;; This is faster and more reliable than checking inside the main loop.
+(defun e2e/httpd-watchdog ()
+  "Restart httpd if it stopped running."
   (unless (httpd-running-p)
     (message "e2e: httpd not running, restarting on port %d" httpd-port)
-    (condition-case restart-err
+    (condition-case err
         (httpd-start)
-      (error (message "e2e: failed to restart httpd: %S" restart-err)))))
+      (error (message "e2e: failed to restart httpd: %S" err)))))
+
+(run-with-timer 0 0.1 #'e2e/httpd-watchdog)
+
+;;; Event loop ----------------------------------------------------------------
+
+;; Keep Emacs alive so timers fire and network I/O is processed.
+;; condition-case prevents async errors from terminating the batch process.
+(while t
+  (condition-case err
+      (accept-process-output nil 1)
+    (error (message "e2e: non-fatal error in event loop: %S" err))))

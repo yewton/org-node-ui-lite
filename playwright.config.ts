@@ -23,7 +23,7 @@ export default defineConfig({
 	],
 	webServer: {
 		command: "npm run dev",
-		url: "http://localhost:5173",
+		url: "http://localhost:5173/api/graph.json",
 		reuseExistingServer: !process.env.CI,
 		timeout: 60_000,
 	},
