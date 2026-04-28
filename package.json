@@ -34,7 +34,7 @@
 		"check": "tsgo",
 		"test": "vitest",
 		"test:ui": "vitest --ui",
-		"test:e2e": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers playwright test",
-		"screenshots": "PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers playwright test --config playwright.screenshots.config.ts"
+		"test:e2e": "playwright test",
+		"screenshots": "playwright test --config playwright.screenshots.config.ts"
 	}
 }

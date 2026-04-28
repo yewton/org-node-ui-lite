@@ -36,6 +36,8 @@ jobs:
         env:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
       - run: npm run screenshots
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
       - name: Commit screenshots
         run: |
           git config user.name "github-actions[bot]"

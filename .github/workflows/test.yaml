@@ -58,3 +58,5 @@ jobs:
         env:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
       - run: npm run test:e2e
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers

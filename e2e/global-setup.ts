@@ -20,19 +20,21 @@ export default async function globalSetup() {
 	writeFileSync(join(distDir, "index.html"), "<html></html>");
 
 	const emacs = spawn("emacs", ["--batch", "--load", emacsScript], {
-		stdio: ["ignore", "pipe", "pipe"],
+		stdio: "ignore",
+		detached: true,
 	});
-
-	emacs.stdout.on("data", (d: Buffer) => process.stdout.write(`[emacs] ${d}`));
-	emacs.stderr.on("data", (d: Buffer) => process.stderr.write(`[emacs] ${d}`));
 
 	emacs.on("exit", (code, signal) => {
 		// SIGTERM (code 15 or signal "SIGTERM") is expected from globalTeardown.
 		if (signal === "SIGTERM" || code === 15) return;
 		if (code !== null && code !== 0) {
-			console.error(`[e2e] Emacs exited unexpectedly with code ${code}`);
+			console.error(
+				`[e2e] Emacs exited unexpectedly with code ${code} signal ${signal}`,
+			);
 		}
 	});
+
+	emacs.unref();
 
 	// Save PID for teardown.
 	writeFileSync(pidFile, String(emacs.pid ?? ""));

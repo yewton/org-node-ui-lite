@@ -13,11 +13,11 @@ npm run test:e2e          # Playwright + Emacs integration tests
 
 Internally this is:
 ```sh
-PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers playwright test
+playwright test
 ```
 
-Chromium binary lives at `/opt/pw-browsers`.  Do not attempt to download a
-different version; install the version that matches the already-present binary.
+In CI, the Chromium binary lives at `/opt/pw-browsers`.  Do not attempt to download a
+different version; install the version that matches the already-present binary. Locally, `npm run test:e2e` will use your default Playwright browsers.
 
 ---
 
@@ -85,6 +85,7 @@ Rules:
 | `graph endpoint returns 31 edges` fails | A fixture file has unintended `[[id:...]]` links in prose/examples |
 | `node endpoint returns backlinks for X` fails | The source node's fixture file is missing the expected link |
 | UI tests fail despite API passing | Vite proxy not running — check `npm run dev` output |
+| Random `ECONNREFUSED` on API tests | Emacs background process likely received `SIGPIPE` or died. Ensure `global-setup.ts` uses `detached: true`, `stdio: "ignore"`, and `emacs.unref()`. |
 
 To inspect what Emacs actually returns:
 ```sh
