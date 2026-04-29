@@ -30,11 +30,31 @@ jobs:
         with:
           version: "29.4"
       - uses: emacs-eldev/setup-eldev@v1
-      - run: npm install
+      - run: npm ci
+      - name: Cache Eldev dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.eldev
+          key: ${{ runner.os }}-eldev-29.4-${{ hashFiles('Eldev') }}
+          restore-keys: |
+            ${{ runner.os }}-eldev-29.4-
       - run: eldev prepare
-      - run: npx playwright install --with-deps chromium
+      - name: Get Playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_ENV
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: /opt/pw-browsers
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+      - name: Install Playwright dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       - run: npm run screenshots
       - name: Commit screenshots
         run: |

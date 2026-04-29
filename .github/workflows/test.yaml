@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-      - run: npm install
+      - run: npm ci
       - run: npm run lint
       - run: npm run check
       - run: npm test
@@ -31,6 +31,13 @@ jobs:
           version: ${{ matrix.emacs-version }}
       - uses: emacs-eldev/setup-eldev@v1
       - uses: actions/checkout@v4
+      - name: Cache Eldev dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.eldev
+          key: ${{ runner.os }}-eldev-${{ matrix.emacs-version }}-${{ hashFiles('Eldev') }}
+          restore-keys: |
+            ${{ runner.os }}-eldev-${{ matrix.emacs-version }}-
       - run: eldev --packaged --debug --trace --time compile --warnings-as-errors
       - run: eldev --debug --trace --time test
 
@@ -50,11 +57,31 @@ jobs:
         with:
           version: ${{ matrix.emacs-version }}
       - uses: emacs-eldev/setup-eldev@v1
-      - run: npm install
+      - run: npm ci
+      - name: Cache Eldev dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.eldev
+          key: ${{ runner.os }}-eldev-${{ matrix.emacs-version }}-${{ hashFiles('Eldev') }}
+          restore-keys: |
+            ${{ runner.os }}-eldev-${{ matrix.emacs-version }}-
       # Install eldev dependencies so emacs-server.el can load org-mem / org-node.
       - run: eldev prepare
+      - name: Get Playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_ENV
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: /opt/pw-browsers
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
       # Install Chromium to the same path used by the npm test:e2e script.
-      - run: npx playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+      - name: Install Playwright dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       - run: npm run test:e2e
