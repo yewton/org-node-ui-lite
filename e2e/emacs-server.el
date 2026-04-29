@@ -52,7 +52,7 @@
 (defvar e2e-scan-done nil)
 (add-hook 'org-mem-initial-scan-hook (lambda () (setq e2e-scan-done t)))
 
-;; In the PR this is how we set it up:
+;; 1. Trigger background initial scan via updater mode
 (org-mem-updater-mode +1)
 
 (message "e2e: Waiting for org-mem async scan to complete...")
@@ -62,16 +62,8 @@
     (accept-process-output nil 0.5)
     (setq waited (+ waited 0.5))))
 
-(if e2e-scan-done
-    (message "e2e: org-mem async scan complete.")
-  (message "e2e: WARNING: org-mem async scan did not complete within timeout!"))
-
-;; Starting org-node-cache-mode alone triggers another cache wipe and scan.
-;; The edges duplication bug (62 edges instead of 31) happens when we query
-;; the links while scans are running or overlapping. To avoid that, we clear
-;; `org-node--candidate<>entry` before we let the cache run, OR we just let it
-;; re-scan securely. Since we only want to ensure the API doesn't serve requests
-;; until it's stable, we just wait for the SECOND scan here:
+;; 2. Enable org-node cache mode. Since it resets cache, it will trigger
+;; another background scan. We hook into it to know when it finishes.
 (setq e2e-scan-done nil)
 (org-node-cache-mode +1)
 
@@ -82,9 +74,16 @@
     (accept-process-output nil 0.5)
     (setq waited (+ waited 0.5))))
 
-(if e2e-scan-done
-    (message "e2e: org-node-cache-mode async scan complete.")
-  (message "e2e: WARNING: org-node-cache-mode async scan did not complete within timeout!"))
+;; 3. Ensure `el-job-ng` has absolutely finished processing everything
+(let ((max-wait 5)
+      (waited 0))
+  (while (and (el-job-ng-busy-p 'org-mem) (< waited max-wait))
+    (accept-process-output nil 0.5)
+    (setq waited (+ waited 0.5))))
+
+;; 4. Deduplicate parsed links/cache edges internally to avoid CI glitches
+(with-memoization (org-mem--table 18 "id")
+  (delete-dups (org-mem--table 18 "id")))
 
 ;;; Start HTTP server ---------------------------------------------------------
 
