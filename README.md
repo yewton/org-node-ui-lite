@@ -7,7 +7,7 @@ This is a personal experiment. It forks
 [org-roam-ui-lite](https://github.com/tani/org-roam-ui-lite) by Masaya Taniguchi
 and replaces the Emacs Lisp backend with one that reads from **org-mem** instead of
 the org-roam SQLite database. The front-end (Vite + React + Cytoscape / Force Graph)
-is used as-is. Many thanks to Masaya Taniguchi for the original work.
+has been modified to better support org-node. Many thanks to Masaya Taniguchi for the original work.
 
 ## Screenshots
 

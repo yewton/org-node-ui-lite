@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-  title: Org-roam UI Lite Server
+  title: Org-node UI Lite Server
   version: "0.1.0"
   description: >
-    Lightweight server exposing Org-roam note graphs via a JSON API and serving a static UI
+    Lightweight server exposing Org-node note graphs via a JSON API and serving a static UI
     (typically compiled from Vite to `dist/`).
 
 servers:
@@ -15,7 +15,7 @@ paths:
     get:
       summary: Serve index.html
       description: >
-        Serves the main front-end UI page (usually `index.html`), located in `org-roam-ui-lite-static-root`.
+        Serves the main front-end UI page (usually `index.html`), located in `org-node-ui-lite-static-root`.
         This acts as the SPA entry point and loads the graph viewer client.
       responses:
         "200":

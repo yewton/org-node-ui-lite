@@ -8,7 +8,7 @@ export interface paths {
 		};
 		/**
 		 * Serve index.html
-		 * @description Serves the main front-end UI page (usually `index.html`), located in `org-roam-ui-lite-static-root`. This acts as the SPA entry point and loads the graph viewer client.
+		 * @description Serves the main front-end UI page (usually `index.html`), located in `org-node-ui-lite-static-root`. This acts as the SPA entry point and loads the graph viewer client.
 		 *
 		 */
 		get: {
