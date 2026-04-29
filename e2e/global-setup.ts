@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, openSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,20 +19,26 @@ export default async function globalSetup() {
 	mkdirSync(distDir, { recursive: true });
 	writeFileSync(join(distDir, "index.html"), "<html></html>");
 
+	const out = openSync(join(repoRoot, "emacs.stdout.log"), "a");
+	const err = openSync(join(repoRoot, "emacs.stderr.log"), "a");
 	const emacs = spawn("emacs", ["--batch", "--load", emacsScript], {
-		stdio: ["ignore", "pipe", "pipe"],
+		stdio: ["ignore", out, err],
+		detached: true,
 	});
-
-	emacs.stdout.on("data", (d: Buffer) => process.stdout.write(`[emacs] ${d}`));
-	emacs.stderr.on("data", (d: Buffer) => process.stderr.write(`[emacs] ${d}`));
 
 	emacs.on("exit", (code, signal) => {
 		// SIGTERM (code 15 or signal "SIGTERM") is expected from globalTeardown.
 		if (signal === "SIGTERM" || code === 15) return;
 		if (code !== null && code !== 0) {
-			console.error(`[e2e] Emacs exited unexpectedly with code ${code}`);
+			console.error(
+				`[e2e] Emacs exited unexpectedly with code ${code} signal ${signal}`,
+			);
 		}
 	});
+
+	emacs.unref();
+
+	emacs.unref();
 
 	// Save PID for teardown.
 	writeFileSync(pidFile, String(emacs.pid ?? ""));
