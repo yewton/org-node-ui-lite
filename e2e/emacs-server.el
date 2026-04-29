@@ -52,7 +52,8 @@
 (defvar e2e-scan-done nil)
 (add-hook 'org-mem-initial-scan-hook (lambda () (setq e2e-scan-done t)))
 
-(org-mem-updater-mode +1) ;; this triggers full scan async
+;; In the PR this is how we set it up:
+(org-mem-updater-mode +1)
 
 (message "e2e: Waiting for org-mem async scan to complete...")
 (let ((max-wait 20)
@@ -65,7 +66,25 @@
     (message "e2e: org-mem async scan complete.")
   (message "e2e: WARNING: org-mem async scan did not complete within timeout!"))
 
-(org-node-cache-mode +1) ;; wait until scan done to enable cache mode
+;; Starting org-node-cache-mode alone triggers another cache wipe and scan.
+;; The edges duplication bug (62 edges instead of 31) happens when we query
+;; the links while scans are running or overlapping. To avoid that, we clear
+;; `org-node--candidate<>entry` before we let the cache run, OR we just let it
+;; re-scan securely. Since we only want to ensure the API doesn't serve requests
+;; until it's stable, we just wait for the SECOND scan here:
+(setq e2e-scan-done nil)
+(org-node-cache-mode +1)
+
+(message "e2e: Waiting for org-node-cache-mode async scan to complete...")
+(let ((max-wait 20)
+      (waited 0))
+  (while (and (not e2e-scan-done) (< waited max-wait))
+    (accept-process-output nil 0.5)
+    (setq waited (+ waited 0.5))))
+
+(if e2e-scan-done
+    (message "e2e: org-node-cache-mode async scan complete.")
+  (message "e2e: WARNING: org-node-cache-mode async scan did not complete within timeout!"))
 
 ;;; Start HTTP server ---------------------------------------------------------
 
