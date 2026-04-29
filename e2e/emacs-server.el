@@ -40,9 +40,24 @@
 ;; Do not open a browser tab when starting the server.
 (setq org-node-ui-lite-open-on-start nil)
 
-;; Enable the two modes documented in org-mem's Quick Start and org-node.
-(org-mem-updater-mode +1)
-(org-node-cache-mode +1)
+;; Force synchronous population of cache to avoid flaky E2E tests
+(require 'org-mem)
+(require 'org-id)
+(setq org-id-track-globally t)
+(setq org-id-locations-file (expand-file-name ".org-id-locations" e2e/test-dir))
+(org-id-update-id-locations (directory-files-recursively (expand-file-name "fixtures" e2e/test-dir) "\\.org$"))
+(setq org-mem-do-sync-with-org-id t)
+
+(org-mem-updater-mode +1) ;; this triggers full scan async
+
+(message "e2e: Waiting for org-mem async scan to complete...")
+(let ((max-wait 20)
+      (waited 0))
+  (while (and (el-job-ng-busy-p 'org-mem) (< waited max-wait))
+    (accept-process-output nil 0.5)
+    (setq waited (+ waited 0.5))))
+
+(org-node-cache-mode +1) ;; wait until scan done to enable cache mode
 
 ;;; Start HTTP server ---------------------------------------------------------
 
