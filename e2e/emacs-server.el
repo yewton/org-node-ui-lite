@@ -42,55 +42,38 @@
 ;; Do not open a browser tab when starting the server.
 (setq org-node-ui-lite-open-on-start nil)
 
-;; Force synchronous population of cache to avoid flaky E2E tests
+;; Prevent test flakiness without causing data duplication.
+;; CI environments were failing due to the async nature of org-mem scans.
+;; To make it synchronous cleanly without triggering double-scans and thus
+;; double edges, we temporarily mock out el-job-ng-run directly for org-mem
+;; to force it to parse synchronously.
 (setq org-id-track-globally t)
 (setq org-id-locations-file (expand-file-name ".org-id-locations" e2e/test-dir))
 (org-id-update-id-locations (directory-files-recursively (expand-file-name "fixtures" e2e/test-dir) "\\.org$"))
 (setq org-mem-do-sync-with-org-id t)
 
-;; Use org-mem-initial-scan-hook to know exactly when the scan is complete
-(defvar e2e-scan-done nil)
-(add-hook 'org-mem-initial-scan-hook (lambda () (setq e2e-scan-done t)))
+;; Override `el-job-ng-run` entirely for `org-mem` to just do its work sync!
+(defvar e2e-original-el-job-ng-run (symbol-function 'el-job-ng-run))
 
-;; By enabling both modes, org-mem-reset can trigger scans simultaneously leading
-;; to duplicates through `nconc` in some versions if the worker jobs overlap.
-;; Wait for the first complete finish of scanning.
+(advice-add 'el-job-ng-run :around
+            (lambda (orig-fn &rest args)
+              (let ((id (plist-get args :id)))
+                (if (eq id 'org-mem)
+                    (let* ((inputs (plist-get args :inputs))
+                           (callback (plist-get args :callback))
+                           (takeover (and (consp inputs) (eq (car inputs) :takeover)))
+                           (files (if takeover (cdr inputs) inputs))
+                           (results (mapcar (lambda (file)
+                                              (org-mem-parser--parse-file file t))
+                                            files)))
+                      (when callback
+                        (funcall callback (if takeover (cons :takeover results) results))))
+                  (apply orig-fn args)))))
+
+(org-mem-updater-mode +1)
 (org-node-cache-mode +1)
 
-(message "e2e: Waiting for org-mem async scan to complete...")
-(let ((max-wait 20)
-      (waited 0))
-  (while (and (not e2e-scan-done) (< waited max-wait))
-    (accept-process-output nil 0.5)
-    (setq waited (+ waited 0.5))))
-
-(if e2e-scan-done
-    (message "e2e: org-mem async scan complete.")
-  (message "e2e: WARNING: org-mem async scan did not complete within timeout!"))
-
-;; Wait for any lingering jobs to close out
-(let ((max-wait 5)
-      (waited 0))
-  (while (and (el-job-ng-busy-p 'org-mem) (< waited max-wait))
-    (accept-process-output nil 0.5)
-    (setq waited (+ waited 0.5))))
-
-;; Safe to enable the file watcher mode *after* all scans are quiet
-(org-mem-updater-mode +1)
-
-;; Make sure `org-mem-all-id-links` deduplicates itself via a patch to the cache.
-;; `org-node-ui-lite--all-edges` fetches items from `org-mem-all-id-links`, and
-;; due to cache overlap or `nconc` behavior, sometimes yields duplicate entries in CI.
-;; We proactively wipe the internal link cache here right before we start the server
-;; so it generates a fresh, clean, deduplicated payload exactly once on the first fetch.
-(with-memoization (org-mem--table 18 "id")
-  nil)
-(with-memoization (org-mem--table 0 'org-mem-all-id-links)
-  nil)
-(with-memoization (org-mem--table 0 'org-mem-all-entries)
-  nil)
-(with-memoization (org-mem--table 0 'org-mem-all-files)
-  nil)
+(message "e2e: org-mem initialized fully synchronous.")
 
 ;;; Start HTTP server ---------------------------------------------------------
 
