@@ -48,12 +48,16 @@
 (org-id-update-id-locations (directory-files-recursively (expand-file-name "fixtures" e2e/test-dir) "\\.org$"))
 (setq org-mem-do-sync-with-org-id t)
 
-;; Use org-mem-initial-scan-hook to know exactly when the scan is complete
+;; In org-node-cache-mode, starting it triggers a wipe and an async scan.
+;; If org-mem-updater-mode is also triggered around the same time,
+;; concurrent parsing issues or list append overlaps can duplicate values.
+;; To avoid that entirely, we enable org-node-cache-mode and spin synchronously
+;; UNTIL the hook fires. We do NOT turn on `org-mem-updater-mode`
+;; since `org-node-cache-mode` already triggers an initial scan via `org-mem-reset`.
 (defvar e2e-scan-done nil)
 (add-hook 'org-mem-initial-scan-hook (lambda () (setq e2e-scan-done t)))
 
-;; 1. Trigger background initial scan via updater mode
-(org-mem-updater-mode +1)
+(org-node-cache-mode +1)
 
 (message "e2e: Waiting for org-mem async scan to complete...")
 (let ((max-wait 20)
@@ -62,28 +66,19 @@
     (accept-process-output nil 0.5)
     (setq waited (+ waited 0.5))))
 
-;; 2. Enable org-node cache mode. Since it resets cache, it will trigger
-;; another background scan. We hook into it to know when it finishes.
-(setq e2e-scan-done nil)
-(org-node-cache-mode +1)
+(if e2e-scan-done
+    (message "e2e: org-mem async scan complete.")
+  (message "e2e: WARNING: org-mem async scan did not complete within timeout!"))
 
-(message "e2e: Waiting for org-node-cache-mode async scan to complete...")
-(let ((max-wait 20)
-      (waited 0))
-  (while (and (not e2e-scan-done) (< waited max-wait))
-    (accept-process-output nil 0.5)
-    (setq waited (+ waited 0.5))))
-
-;; 3. Ensure `el-job-ng` has absolutely finished processing everything
+;; Wait for any lingering jobs to close out
 (let ((max-wait 5)
       (waited 0))
   (while (and (el-job-ng-busy-p 'org-mem) (< waited max-wait))
     (accept-process-output nil 0.5)
     (setq waited (+ waited 0.5))))
 
-;; 4. Deduplicate parsed links/cache edges internally to avoid CI glitches
-(with-memoization (org-mem--table 18 "id")
-  (delete-dups (org-mem--table 18 "id")))
+;; Safe to enable the file watcher mode *after* all scans are quiet
+(org-mem-updater-mode +1)
 
 ;;; Start HTTP server ---------------------------------------------------------
 
