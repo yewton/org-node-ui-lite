@@ -89,7 +89,7 @@ org-node uses for its completion interface."
       (when-let ((src (org-mem-link-nearby-id link))
                  (dst (org-mem-link-target link)))
         (push `((source . ,src) (dest . ,dst)) result)))
-    result))
+    (delete-dups result)))
 
 (defun org-node-ui-lite--entry-raw (entry)
   "Return the raw Org file text for ENTRY.

@@ -148,3 +148,6 @@ test-results/
 .emacs-server-pid
 *.elc
 *-autoloads.el
+
+# e2e testing artifacts
+e2e/.org-id-locations
