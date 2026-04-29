@@ -57,18 +57,26 @@
 ;;; Event loop and watchdog ---------------------------------------------------
 
 ;; Keep Emacs alive so the HTTP server continues to handle requests.
-;; We use an inline watchdog to check if the httpd process is still alive
+;; We use a timer-based watchdog to check if the httpd process is still alive
 ;; and listening. In Emacs 30.x, async callbacks (e.g., from org-mem) can
 ;; sometimes encounter errors that close the network process without removing
 ;; the process object itself, so we explicitly check `process-status` for `listen`.
+(run-with-timer 1 1
+                (lambda ()
+                  (let ((proc (get-process "httpd")))
+                    (when (and proc (not (eq (process-status proc) 'listen)))
+                      (delete-process proc)
+                      (setq proc nil))
+                    (unless proc
+                      (message "e2e: httpd not listening, restarting on port %d" httpd-port)
+                      (condition-case restart-err
+                          (httpd-start)
+                        (error (message "e2e: failed to restart httpd: %S" restart-err)))))))
+
+;; Process network I/O and async scan callbacks indefinitely.
+;; `condition-case` prevents unhandled async errors from terminating Emacs
+;; before Playwright sends SIGTERM. We catch all conditions including `quit`.
 (while t
   (condition-case err
       (accept-process-output nil 1)
-    (t (message "e2e: non-fatal error or quit in event loop: %S" err)))
-  (let ((proc (get-process "httpd")))
-    (unless (and proc (eq (process-status proc) 'listen))
-      (message "e2e: httpd not listening, restarting on port %d" httpd-port)
-      (when proc (delete-process proc))
-      (condition-case restart-err
-          (httpd-start)
-        (error (message "e2e: failed to restart httpd: %S" restart-err))))))
+    (t (message "e2e: non-fatal error in event loop: %S" err))))

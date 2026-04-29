@@ -32,22 +32,10 @@ jobs:
       - uses: emacs-eldev/setup-eldev@v1
       - run: npm install
       - run: eldev prepare
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: /opt/pw-browsers
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
-
       - run: npx playwright install --with-deps chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
         env:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
-
       - run: npm run screenshots
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
       - name: Commit screenshots
         run: |
           git config user.name "github-actions[bot]"

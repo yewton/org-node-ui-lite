@@ -53,20 +53,8 @@ jobs:
       - run: npm install
       # Install eldev dependencies so emacs-server.el can load org-mem / org-node.
       - run: eldev prepare
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: /opt/pw-browsers
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
-
       # Install Chromium to the same path used by the npm test:e2e script.
       - run: npx playwright install --with-deps chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
         env:
           PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
-
       - run: npm run test:e2e
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
