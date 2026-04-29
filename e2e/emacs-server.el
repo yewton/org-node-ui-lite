@@ -52,12 +52,9 @@
 (defvar e2e-scan-done nil)
 (add-hook 'org-mem-initial-scan-hook (lambda () (setq e2e-scan-done t)))
 
-;; In org-node-cache-mode, starting it triggers a wipe and an async scan.
-;; If org-mem-updater-mode is also triggered around the same time,
-;; concurrent parsing issues or list append overlaps can duplicate values.
-;; To avoid that entirely, we enable org-node-cache-mode and spin synchronously
-;; UNTIL the hook fires. We do NOT turn on `org-mem-updater-mode`
-;; since `org-node-cache-mode` already triggers an initial scan via `org-mem-reset`.
+;; By enabling both modes, org-mem-reset can trigger scans simultaneously leading
+;; to duplicates through `nconc` in some versions if the worker jobs overlap.
+;; Wait for the first complete finish of scanning.
 (org-node-cache-mode +1)
 
 (message "e2e: Waiting for org-mem async scan to complete...")
@@ -81,28 +78,19 @@
 ;; Safe to enable the file watcher mode *after* all scans are quiet
 (org-mem-updater-mode +1)
 
-;; Due to an underlying edge case where multiple async background processes
-;; run simultaneously during initialization, org-mem-all-id-links can
-;; end up populated with duplicate values via `nconc`.
-;; Before the HTTP server accepts any connections, explicitly deduplicate
-;; the in-memory parsed result sets so that `/api/graph.json` stays stable.
-(let ((deduped (make-hash-table :test 'equal))
-      (deduped-links nil))
-  (dolist (link (org-mem-all-id-links))
-    ;; deduplicate links that have the exact same target and source file/offset
-    (let ((key (list (org-mem-link-target link)
-                     (org-mem-link-type link)
-                     (org-mem-link-file link)
-                     (ignore-errors (org-mem-link-property :begin link)))))
-      (unless (gethash key deduped)
-        (puthash key t deduped)
-        (push link deduped-links))))
-  ;; Overwrite the internal cache directly for the specific queries
-  ;; org-node-ui-lite makes.
-  (with-memoization (org-mem--table 18 "id")
-    (setq org-mem--table-18-id (nreverse deduped-links)))
-  (with-memoization (org-mem--table 0 'org-mem-all-id-links)
-    (setq org-mem--table-0-org-mem-all-id-links (nreverse deduped-links))))
+;; Make sure `org-mem-all-id-links` deduplicates itself via a patch to the cache.
+;; `org-node-ui-lite--all-edges` fetches items from `org-mem-all-id-links`, and
+;; due to cache overlap or `nconc` behavior, sometimes yields duplicate entries in CI.
+;; We proactively wipe the internal link cache here right before we start the server
+;; so it generates a fresh, clean, deduplicated payload exactly once on the first fetch.
+(with-memoization (org-mem--table 18 "id")
+  nil)
+(with-memoization (org-mem--table 0 'org-mem-all-id-links)
+  nil)
+(with-memoization (org-mem--table 0 'org-mem-all-entries)
+  nil)
+(with-memoization (org-mem--table 0 'org-mem-all-files)
+  nil)
 
 ;;; Start HTTP server ---------------------------------------------------------
 
