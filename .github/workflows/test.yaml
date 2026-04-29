@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["**"]
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -85,3 +88,75 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
       - run: npm run test:e2e
+
+  check-screenshots:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      should_run: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'e2e/screenshots.spec.ts'
+              - 'playwright.screenshots.config.ts'
+              - 'packages/frontend/src/**'
+              - 'packages/frontend/package.json'
+
+  screenshots:
+    needs: [test, test-elisp, test-e2e, check-screenshots]
+    if: always() && github.event_name == 'pull_request' && needs.check-screenshots.outputs.should_run == 'true' && needs.test.result == 'success' && needs.test-elisp.result == 'success' && needs.test-e2e.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: jcs090218/setup-emacs@master
+        with:
+          version: "29.4"
+      - uses: emacs-eldev/setup-eldev@v1
+      - run: npm ci
+      - name: Cache Eldev dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.eldev
+          key: ${{ runner.os }}-eldev-29.4-${{ hashFiles('Eldev') }}
+          restore-keys: |
+            ${{ runner.os }}-eldev-29.4-
+      - run: eldev prepare
+      - name: Get Playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_ENV
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: /opt/pw-browsers
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+      - name: Install Playwright dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - run: npm run screenshots
+      - name: Commit screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots/
+          if git diff --cached --quiet; then
+            echo "Screenshots unchanged, nothing to commit."
+          else
+            git commit -m "chore: update README screenshots [skip ci]"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
