@@ -48,15 +48,16 @@
 (org-id-update-id-locations (directory-files-recursively (expand-file-name "fixtures" e2e/test-dir) "\\.org$"))
 (setq org-mem-do-sync-with-org-id t)
 
+;; Use org-mem-initial-scan-hook to know exactly when the scan is complete
+(defvar e2e-scan-done nil)
+(add-hook 'org-mem-initial-scan-hook (lambda () (setq e2e-scan-done t)))
+
 ;; In org-node-cache-mode, starting it triggers a wipe and an async scan.
 ;; If org-mem-updater-mode is also triggered around the same time,
 ;; concurrent parsing issues or list append overlaps can duplicate values.
 ;; To avoid that entirely, we enable org-node-cache-mode and spin synchronously
 ;; UNTIL the hook fires. We do NOT turn on `org-mem-updater-mode`
 ;; since `org-node-cache-mode` already triggers an initial scan via `org-mem-reset`.
-(defvar e2e-scan-done nil)
-(add-hook 'org-mem-initial-scan-hook (lambda () (setq e2e-scan-done t)))
-
 (org-node-cache-mode +1)
 
 (message "e2e: Waiting for org-mem async scan to complete...")
@@ -79,6 +80,29 @@
 
 ;; Safe to enable the file watcher mode *after* all scans are quiet
 (org-mem-updater-mode +1)
+
+;; Due to an underlying edge case where multiple async background processes
+;; run simultaneously during initialization, org-mem-all-id-links can
+;; end up populated with duplicate values via `nconc`.
+;; Before the HTTP server accepts any connections, explicitly deduplicate
+;; the in-memory parsed result sets so that `/api/graph.json` stays stable.
+(let ((deduped (make-hash-table :test 'equal))
+      (deduped-links nil))
+  (dolist (link (org-mem-all-id-links))
+    ;; deduplicate links that have the exact same target and source file/offset
+    (let ((key (list (org-mem-link-target link)
+                     (org-mem-link-type link)
+                     (org-mem-link-file link)
+                     (ignore-errors (org-mem-link-property :begin link)))))
+      (unless (gethash key deduped)
+        (puthash key t deduped)
+        (push link deduped-links))))
+  ;; Overwrite the internal cache directly for the specific queries
+  ;; org-node-ui-lite makes.
+  (with-memoization (org-mem--table 18 "id")
+    (setq org-mem--table-18-id (nreverse deduped-links)))
+  (with-memoization (org-mem--table 0 'org-mem-all-id-links)
+    (setq org-mem--table-0-org-mem-all-id-links (nreverse deduped-links))))
 
 ;;; Start HTTP server ---------------------------------------------------------
 
