@@ -91,7 +91,7 @@ jobs:
 
   check-screenshots:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.actor != 'github-actions[bot]' && (github.event_name == 'pull_request' || github.event_name == 'push')
     outputs:
       should_run: ${{ steps.filter.outputs.frontend }}
     steps:
@@ -108,13 +108,10 @@ jobs:
 
   screenshots:
     needs: [test, test-elisp, test-e2e, check-screenshots]
-    if: always() && github.event_name == 'pull_request' && needs.check-screenshots.outputs.should_run == 'true' && needs.test.result == 'success' && needs.test-elisp.result == 'success' && needs.test-e2e.result == 'success'
+    if: always() && needs.check-screenshots.outputs.should_run == 'true' && needs.test.result == 'success' && needs.test-elisp.result == 'success' && needs.test-e2e.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -149,14 +146,17 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
       - run: npm run screenshots
-      - name: Commit screenshots
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/screenshots/
-          if git diff --cached --quiet; then
-            echo "Screenshots unchanged, nothing to commit."
-          else
-            git commit -m "chore: update README screenshots [skip ci]"
-            git push origin HEAD:${{ github.head_ref }}
-          fi
+      - name: Upload screenshots artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshots
+          path: docs/screenshots/
+      - name: Create Pull Request for updated screenshots
+        if: github.event_name == 'push'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: "chore: update README screenshots"
+          title: "chore: update README screenshots"
+          body: "Automated PR to update README screenshots."
+          branch: "bot/update-screenshots"
