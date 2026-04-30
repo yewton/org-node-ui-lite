@@ -20,6 +20,10 @@ jobs:
           node-version: "24"
           cache: npm
       - run: npm ci
+      - name: Verify .source-hash is up to date
+        run: |
+          npm run gen-hash
+          git diff --exit-code packages/frontend/.source-hash
       - run: npm run lint
       - run: npm run check
       - run: npm test

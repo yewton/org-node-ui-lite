@@ -191,19 +191,124 @@
 ;;;; org-node-ui-lite-rebuild-frontend
 
 (ert-deftest org-node-ui-lite-rebuild-frontend/calls-build-and-start ()
-  "Calls `org-node-ui-lite--build-and-start' when `npm' is available."
-  (let (called)
-    (cl-letf (((symbol-function 'executable-find)
-               (lambda (cmd) (when (string= cmd "npm") "/usr/bin/npm")))
+  "Passes npm path and repo root to --build-and-start."
+  (let (captured-npm captured-root)
+    (cl-letf (((symbol-function 'executable-find) (lambda (_) "/usr/bin/npm"))
               ((symbol-function 'org-node-ui-lite--build-and-start)
-               (lambda (npm _root) (setq called npm))))
+               (lambda (npm root)
+                 (setq captured-npm npm captured-root root))))
       (org-node-ui-lite-rebuild-frontend)
-      (should (string= "/usr/bin/npm" called)))))
+      (should (string= "/usr/bin/npm" captured-npm))
+      (should (string= (file-name-directory org-node-ui-lite--this-file)
+                       captured-root)))))
 
 (ert-deftest org-node-ui-lite-rebuild-frontend/signals-user-error-when-npm-missing ()
-  "Signals `user-error' when `npm' is not found."
+  "Raises user-error when npm is not found on PATH."
   (cl-letf (((symbol-function 'executable-find) (lambda (_) nil)))
     (should-error (org-node-ui-lite-rebuild-frontend) :type 'user-error)))
+
+(ert-deftest org-node-ui-lite-rebuild-frontend/kills-running-build-first ()
+  "Kills any in-progress build before starting a new one."
+  (let (kill-called)
+    (cl-letf (((symbol-function 'executable-find) (lambda (_) "/usr/bin/npm"))
+              ((symbol-function 'process-live-p) (lambda (_) t))
+              ((symbol-function 'kill-process) (lambda (_) (setq kill-called t)))
+              ((symbol-function 'org-node-ui-lite--build-and-start) #'ignore))
+      (let ((org-node-ui-lite--build-process 'fake-proc))
+        (org-node-ui-lite-rebuild-frontend)
+        (should kill-called)
+        (should (null org-node-ui-lite--build-process))))))
+
+;;;; org-node-ui-lite--read-hash-file
+
+(ert-deftest org-node-ui-lite--read-hash-file/returns-trimmed-content ()
+  "Returns the trimmed hash string when the file exists."
+  (let ((tmpfile (make-temp-file "org-node-ui-lite-test-hash-")))
+    (unwind-protect
+        (progn
+          (with-temp-file tmpfile (insert "abc123\n"))
+          (should (string= "abc123"
+                           (org-node-ui-lite--read-hash-file tmpfile))))
+      (delete-file tmpfile))))
+
+(ert-deftest org-node-ui-lite--read-hash-file/returns-nil-when-absent ()
+  "Returns nil when the file does not exist."
+  (should (null (org-node-ui-lite--read-hash-file
+                 "/nonexistent/path/.source-hash"))))
+
+;;;; org-node-ui-lite--frontend-stale-p
+
+(ert-deftest org-node-ui-lite--frontend-stale-p/not-stale-when-hashes-match ()
+  "Returns nil when .source-hash and dist/.build-hash contain the same digest."
+  (cl-letf (((symbol-function 'org-node-ui-lite--read-hash-file)
+             (lambda (_path) "aaa")))
+    (should (null (org-node-ui-lite--frontend-stale-p "/fake/root/")))))
+
+(ert-deftest org-node-ui-lite--frontend-stale-p/stale-when-hashes-differ ()
+  "Returns non-nil when .source-hash and dist/.build-hash contain different digests."
+  (cl-letf (((symbol-function 'org-node-ui-lite--read-hash-file)
+             (lambda (path)
+               (if (string-suffix-p ".source-hash" path) "aaa" "bbb"))))
+    (should (org-node-ui-lite--frontend-stale-p "/fake/root/"))))
+
+(ert-deftest org-node-ui-lite--frontend-stale-p/stale-when-build-hash-absent ()
+  "Returns non-nil when .source-hash exists but dist/.build-hash is absent."
+  (cl-letf (((symbol-function 'org-node-ui-lite--read-hash-file)
+             (lambda (path)
+               (when (string-suffix-p ".source-hash" path) "aaa"))))
+    (should (org-node-ui-lite--frontend-stale-p "/fake/root/"))))
+
+(ert-deftest org-node-ui-lite--frontend-stale-p/not-stale-when-source-hash-absent ()
+  "Returns nil (graceful degradation) when .source-hash is absent."
+  (cl-letf (((symbol-function 'org-node-ui-lite--read-hash-file)
+             (lambda (_path) nil)))
+    (should (null (org-node-ui-lite--frontend-stale-p "/fake/root/")))))
+
+;;;; org-node-ui-lite-mode staleness branch
+
+(ert-deftest org-node-ui-lite-mode/rebuilds-when-stale ()
+  "Triggers a build when dist/ exists but the front-end is stale."
+  (let (build-called)
+    (cl-letf (((symbol-function 'org-node-ui-lite--dist-p) (lambda () t))
+              ((symbol-function 'org-node-ui-lite--frontend-stale-p)
+               (lambda (_root) t))
+              ((symbol-function 'executable-find) (lambda (_) "/usr/bin/npm"))
+              ((symbol-function 'org-node-ui-lite--check-prerequisites) #'ignore)
+              ((symbol-function 'org-node-ui-lite--build-and-start)
+               (lambda (_npm _root) (setq build-called t)))
+              ((symbol-function 'process-live-p) (lambda (_) nil)))
+      (let ((org-node-ui-lite-mode nil))
+        (org-node-ui-lite-mode +1)
+        (should build-called)
+        (cl-letf (((symbol-function 'httpd-stop) #'ignore))
+          (org-node-ui-lite-mode -1))))))
+
+(ert-deftest org-node-ui-lite-mode/starts-directly-when-fresh ()
+  "Starts the server directly (no rebuild) when dist/ is present and hash matches."
+  (let (server-started)
+    (cl-letf (((symbol-function 'org-node-ui-lite--dist-p) (lambda () t))
+              ((symbol-function 'org-node-ui-lite--frontend-stale-p)
+               (lambda (_root) nil))
+              ((symbol-function 'org-node-ui-lite--check-prerequisites) #'ignore)
+              ((symbol-function 'org-node-ui-lite--start-server)
+               (lambda () (setq server-started t)))
+              ((symbol-function 'process-live-p) (lambda (_) nil)))
+      (let ((org-node-ui-lite-mode nil))
+        (org-node-ui-lite-mode +1)
+        (should server-started)
+        (cl-letf (((symbol-function 'httpd-stop) #'ignore))
+          (org-node-ui-lite-mode -1))))))
+
+(ert-deftest org-node-ui-lite-mode/signals-user-error-when-stale-and-npm-missing ()
+  "Raises user-error when the front-end is stale and npm is unavailable."
+  (cl-letf (((symbol-function 'org-node-ui-lite--dist-p) (lambda () t))
+            ((symbol-function 'org-node-ui-lite--frontend-stale-p)
+             (lambda (_root) t))
+            ((symbol-function 'executable-find) (lambda (_) nil))
+            ((symbol-function 'org-node-ui-lite--check-prerequisites) #'ignore)
+            ((symbol-function 'process-live-p) (lambda (_) nil)))
+    (let ((org-node-ui-lite-mode nil))
+      (should-error (org-node-ui-lite-mode +1) :type 'user-error))))
 
 (provide 'org-node-ui-lite-test)
 ;;; org-node-ui-lite-test.el ends here

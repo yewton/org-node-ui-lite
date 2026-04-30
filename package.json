@@ -29,6 +29,7 @@
 	"scripts": {
 		"build": "npm --workspace=packages/frontend run build",
 		"dev": "npm --workspace=packages/frontend run dev",
+		"gen-hash": "npm --workspace=packages/frontend run gen-hash",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"check": "tsgo",
