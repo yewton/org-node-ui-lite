@@ -3,6 +3,7 @@ import { useCallback, useRef } from "react";
 import { destroyGraph, drawGraph } from "../graph/graph.ts";
 import {
 	applyNodeStyle,
+	focusNode,
 	highlightNeighborhood,
 	resetHighlight,
 } from "../graph/graph-style.ts";
@@ -56,6 +57,7 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 			dispatch({ type: "SET_STATE", payload: { selected: node } });
 			dispatch({ type: "OPEN_DETAILS" });
 			highlightNode(nodeId);
+			focusNode(graphInstanceRef.current, nodeId);
 		},
 		[dispatch, highlightNode],
 	);

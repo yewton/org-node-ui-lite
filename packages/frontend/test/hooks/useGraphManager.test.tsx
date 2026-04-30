@@ -13,6 +13,7 @@ vi.mock("../../src/graph/graph.ts", () => ({
 
 vi.mock("../../src/graph/graph-style.ts", () => ({
 	applyNodeStyle: vi.fn(),
+	focusNode: vi.fn(),
 	highlightNeighborhood: vi.fn(),
 	resetHighlight: vi.fn(),
 }));

@@ -114,3 +114,82 @@ export function resetHighlight(
 	graphObj.nodeColor?.("color");
 	graphObj.linkColor?.("color");
 }
+
+/**
+ * Center and zoom on a specific node.
+ *
+ * @param graph - Graph instance
+ * @param focusId - Node id to focus on
+ */
+export function focusNode(
+	graph: GraphInstance | undefined | Record<string, unknown>,
+	focusId: string,
+): void {
+	if (!graph) return;
+
+	const graphObj = graph as {
+		animate?: (opts: unknown, props: unknown) => void;
+		$id?: (id: string) => { length: number };
+		cameraPosition?: (pos: unknown, lookAt: unknown, ms: number) => void;
+		centerAt?: (x: number, y: number, ms: number) => void;
+		zoom?: (val: number, ms: number) => void;
+		graphData?: () => {
+			nodes: Array<{ id: string; x?: number; y?: number; z?: number }>;
+		};
+	};
+
+	// Cytoscape
+	if (
+		typeof graphObj.animate === "function" &&
+		typeof graphObj.$id === "function"
+	) {
+		const node = graphObj.$id(focusId);
+		if (node && node.length > 0) {
+			graphObj.animate(
+				{
+					center: { eles: node },
+					zoom: 1.5,
+				},
+				{ duration: 500 },
+			);
+		}
+		return;
+	}
+
+	// Force Graph 3D
+	if (typeof graphObj.cameraPosition === "function") {
+		const data = graphObj.graphData?.();
+		if (!data) return;
+		const node = data.nodes.find((n) => n.id === focusId);
+		if (node) {
+			// Calculate a position slightly offset from the node for a good view
+			const distance = 100;
+			const distRatio =
+				1 + distance / Math.hypot(node.x || 0, node.y || 0, node.z || 0);
+			const newPos =
+				node.x || node.y || node.z
+					? {
+							x: (node.x || 0) * distRatio,
+							y: (node.y || 0) * distRatio,
+							z: (node.z || 0) * distRatio,
+						}
+					: { x: 0, y: 0, z: distance };
+			graphObj.cameraPosition(newPos, node, 1000);
+		}
+		return;
+	}
+
+	// Force Graph 2D
+	if (
+		typeof graphObj.centerAt === "function" &&
+		typeof graphObj.zoom === "function"
+	) {
+		const data = graphObj.graphData?.();
+		if (!data) return;
+		const node = data.nodes.find((n) => n.id === focusId);
+		if (node) {
+			graphObj.centerAt(node.x || 0, node.y || 0, 1000);
+			graphObj.zoom(2, 1000);
+		}
+	}
+}
