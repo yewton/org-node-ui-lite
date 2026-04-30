@@ -14,8 +14,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: npm
@@ -34,9 +34,9 @@ jobs:
         with:
           version: ${{ matrix.emacs-version }}
       - uses: emacs-eldev/setup-eldev@v1
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Cache Eldev dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.eldev
           key: ${{ runner.os }}-eldev-${{ matrix.emacs-version }}-${{ hashFiles('Eldev') }}
@@ -52,8 +52,8 @@ jobs:
       matrix:
         emacs-version: ["29.4", "30.1", "30.2"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: npm
@@ -63,7 +63,7 @@ jobs:
       - uses: emacs-eldev/setup-eldev@v1
       - run: npm ci
       - name: Cache Eldev dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.eldev
           key: ${{ runner.os }}-eldev-${{ matrix.emacs-version }}-${{ hashFiles('Eldev') }}
@@ -74,7 +74,7 @@ jobs:
       - name: Get Playwright version
         run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_ENV
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: /opt/pw-browsers
@@ -96,8 +96,8 @@ jobs:
     outputs:
       should_run: ${{ steps.filter.outputs.frontend }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -112,8 +112,8 @@ jobs:
     if: always() && needs.check-screenshots.outputs.should_run == 'true' && needs.test.result == 'success' && needs.test-elisp.result == 'success' && needs.test-e2e.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: npm
@@ -123,7 +123,7 @@ jobs:
       - uses: emacs-eldev/setup-eldev@v1
       - run: npm ci
       - name: Cache Eldev dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.eldev
           key: ${{ runner.os }}-eldev-29.4-${{ hashFiles('Eldev') }}
@@ -133,7 +133,7 @@ jobs:
       - name: Get Playwright version
         run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_ENV
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: /opt/pw-browsers
