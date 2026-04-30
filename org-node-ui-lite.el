@@ -292,6 +292,23 @@ build manually: cd %s && npm install && npm run build"
     (httpd-stop)
     (message "org-node-ui-lite stopped"))))
 
+;;;###autoload
+(defun org-node-ui-lite-rebuild-frontend ()
+  "Rebuild the org-node-ui-lite front-end.
+This stops any ongoing build and runs `npm run build' in the
+background.  Requires `npm' to be available."
+  (interactive)
+  (when (process-live-p org-node-ui-lite--build-process)
+    (kill-process org-node-ui-lite--build-process)
+    (setq org-node-ui-lite--build-process nil))
+  (let* ((root (file-name-directory org-node-ui-lite--this-file))
+         (npm  (executable-find "npm")))
+    (if npm
+        (org-node-ui-lite--build-and-start npm root)
+      (user-error
+       "org-node-ui-lite: `npm' not found; build manually: cd %s && npm install && npm run build"
+       root))))
+
 (defun org-node-ui-lite--build-and-start (npm repo-root)
   "Run npm install (if needed) and npm run build asynchronously.
 NPM is the absolute path to the npm executable.  REPO-ROOT is the

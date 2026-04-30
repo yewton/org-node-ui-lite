@@ -188,5 +188,22 @@
         (org-node-ui-lite--build-and-start "/usr/bin/npm" "/repo/root/")))
     (should (string= "/repo/root/" proc-dir))))
 
+;;;; org-node-ui-lite-rebuild-frontend
+
+(ert-deftest org-node-ui-lite-rebuild-frontend/calls-build-and-start ()
+  "Calls `org-node-ui-lite--build-and-start' when `npm' is available."
+  (let (called)
+    (cl-letf (((symbol-function 'executable-find)
+               (lambda (cmd) (when (string= cmd "npm") "/usr/bin/npm")))
+              ((symbol-function 'org-node-ui-lite--build-and-start)
+               (lambda (npm _root) (setq called npm))))
+      (org-node-ui-lite-rebuild-frontend)
+      (should (string= "/usr/bin/npm" called)))))
+
+(ert-deftest org-node-ui-lite-rebuild-frontend/signals-user-error-when-npm-missing ()
+  "Signals `user-error' when `npm' is not found."
+  (cl-letf (((symbol-function 'executable-find) (lambda (_) nil)))
+    (should-error (org-node-ui-lite-rebuild-frontend) :type 'user-error)))
+
 (provide 'org-node-ui-lite-test)
 ;;; org-node-ui-lite-test.el ends here
