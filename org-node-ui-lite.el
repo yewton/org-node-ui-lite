@@ -24,7 +24,7 @@
 ;;
 ;; INTERACTIVE COMMANDS
 ;;   M-x org-node-ui-lite-select-current
-;;       Select the org-node at point in the WebUI regardless of follow-mode.
+;;       Select the org-node at point in the WebUI regardless of `follow-mode'.
 ;;
 ;; QUICK START
 ;;   In init.el:
@@ -152,7 +152,7 @@ The front-end uses this to detect explicit selection requests.")
 ;;;###autoload
 (defun org-node-ui-lite-select-current ()
   "Select the org-node at point in the WebUI.
-Works regardless of whether follow-mode is enabled in the browser."
+Works regardless of whether `follow-mode' is enabled in the browser."
   (interactive)
   (let ((id (when (derived-mode-p 'org-mode)
               (ignore-errors (org-entry-get-with-inheritance "ID")))))
@@ -219,9 +219,6 @@ Works regardless of whether follow-mode is enabled in the browser."
 
 ;;;; Setup helpers
 
-(defvar org-node-ui-lite--build-process nil
-  "Live `npm run build' process, or nil when no build is in progress.")
-
 (defun org-node-ui-lite--dist-p ()
   "Return non-nil when the compiled front-end exists."
   (file-exists-p
@@ -253,32 +250,20 @@ Works regardless of whether follow-mode is enabled in the browser."
   "Global minor mode that serves the org-node-ui-lite graph browser.
 
 On first enable, checks whether the front-end has been compiled.
-If the `dist/' directory is missing and `npm' is available the build
-runs automatically in the background.  When `npm' cannot be found a
-`user-error' is raised with manual build instructions."
+If the `dist/' directory is missing, a `user-error' is raised
+instructing the user to use the `build' branch."
   :global t
   :group 'org-node-ui-lite
   (cond
    (org-node-ui-lite-mode
-    ;; Abort any stale build from a previous enable attempt.
-    (when (process-live-p org-node-ui-lite--build-process)
-      (kill-process org-node-ui-lite--build-process)
-      (setq org-node-ui-lite--build-process nil))
     (condition-case err
         (progn
           (add-hook 'post-command-hook #'org-node-ui-lite--track-current-node)
           (org-node-ui-lite--check-prerequisites)
           (if (org-node-ui-lite--dist-p)
               (org-node-ui-lite--start-server)
-            ;; Front-end not built yet — try to build it automatically.
-            (let* ((root (file-name-directory org-node-ui-lite--this-file))
-                   (npm  (executable-find "npm")))
-              (if npm
-                  (org-node-ui-lite--build-and-start npm root)
-                (user-error
-                 "org-node-ui-lite: front-end not built and `npm' not found; \
-build manually: cd %s && npm install && npm run build"
-                 root)))))
+            (user-error
+             "Org-node-ui-lite: front-end not built.  Please install from the `build' branch")))
       (error
        (org-node-ui-lite-mode -1)
        (signal (car err) (cdr err)))))
@@ -286,49 +271,8 @@ build manually: cd %s && npm install && npm run build"
     (remove-hook 'post-command-hook #'org-node-ui-lite--track-current-node)
     (setq org-node-ui-lite--current-node-id nil
           org-node-ui-lite--explicit-seq 0)
-    (when (process-live-p org-node-ui-lite--build-process)
-      (kill-process org-node-ui-lite--build-process)
-      (setq org-node-ui-lite--build-process nil))
     (httpd-stop)
     (message "org-node-ui-lite stopped"))))
-
-(defun org-node-ui-lite--build-and-start (npm repo-root)
-  "Run npm install (if needed) and npm run build asynchronously.
-NPM is the absolute path to the npm executable.  REPO-ROOT is the
-top-level directory of the org-node-ui-lite checkout.
-On success the HTTP server is started; on failure the mode is disabled
-and the build output is shown."
-  (let* ((has-modules (file-directory-p
-                       (expand-file-name "node_modules" repo-root)))
-         (npm*   (shell-quote-argument npm))
-         (sh-cmd (if has-modules
-                     (format "%s --prefix packages/frontend run build" npm*)
-                   (format "%s install && %s --prefix packages/frontend run build"
-                           npm* npm*)))
-         (buf (get-buffer-create "*org-node-ui-lite-build*")))
-    (with-current-buffer buf (erase-buffer))
-    (message "org-node-ui-lite: %s front-end (this may take a minute)…"
-             (if has-modules "Building" "Installing dependencies and building"))
-    (setq org-node-ui-lite--build-process
-          (let ((default-directory repo-root))
-            (make-process
-             :name "org-node-ui-lite-build"
-             :buffer buf
-             :noquery t
-             :command (list shell-file-name shell-command-switch sh-cmd)
-             :sentinel
-             (lambda (_proc event)
-               (setq org-node-ui-lite--build-process nil)
-               (if (string-match-p "finished" event)
-                   (progn
-                     (message "org-node-ui-lite: Build complete.")
-                     ;; Only start if the user hasn't disabled the mode meanwhile.
-                     (when org-node-ui-lite-mode
-                       (org-node-ui-lite--start-server)))
-                 (org-node-ui-lite-mode -1)
-                 (display-buffer (get-buffer "*org-node-ui-lite-build*"))
-                 (message (concat "org-node-ui-lite: Build failed — "
-                                  "see buffer *org-node-ui-lite-build*")))))))))
 
 (provide 'org-node-ui-lite)
 ;;; org-node-ui-lite.el ends here

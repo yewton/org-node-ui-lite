@@ -176,17 +176,6 @@
       (should (string= "existing-id" org-node-ui-lite--current-node-id))
       (should (= 3 org-node-ui-lite--explicit-seq)))))
 
-;;;; org-node-ui-lite--build-and-start
-
-(ert-deftest org-node-ui-lite--build-and-start/process-runs-in-repo-root ()
-  "npm process must start in repo-root regardless of the caller's directory."
-  (let (proc-dir)
-    (cl-letf (((symbol-function 'make-process)
-               (lambda (&rest _) (setq proc-dir default-directory) nil))
-              ((symbol-function 'file-directory-p) (lambda (_) nil)))
-      (let ((default-directory "/unrelated/"))
-        (org-node-ui-lite--build-and-start "/usr/bin/npm" "/repo/root/")))
-    (should (string= "/repo/root/" proc-dir))))
 
 (provide 'org-node-ui-lite-test)
 ;;; org-node-ui-lite-test.el ends here
