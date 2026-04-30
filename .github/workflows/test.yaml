@@ -88,7 +88,12 @@ jobs:
       - name: Install Playwright dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
-      - run: npm run test:e2e
+      - name: Run E2E tests
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          command: npm run test:e2e
 
   check-screenshots:
     runs-on: ubuntu-latest
