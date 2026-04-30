@@ -13,27 +13,11 @@ jobs:
     steps:
       - name: Checkout main branch
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Checkout build branch and merge main
-        run: |
-          # If 'build' branch doesn't exist, create it as an orphan branch
-          if ! git ls-remote --exit-code --heads origin build; then
-            git checkout --orphan build
-            git reset --hard
-            git commit --allow-empty -m "Initial commit for build branch"
-            git push origin build
-          fi
-
-          # Checkout build branch and merge main
-          git checkout build
-          git merge main --no-edit || (git checkout --ours . && git add . && git commit -m "Resolve merge conflicts by favoring main")
 
       - name: Setup Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -46,12 +30,40 @@ jobs:
           npm ci
           npm run build
 
-      - name: Commit and push changes
+      - name: Prepare distribution artifacts
         run: |
-          # Force add dist directory (even if ignored by .gitignore)
-          git add -f packages/frontend/dist/
+          # Create a temporary directory outside the repo
+          mkdir -p ../dist_artifacts
+          mkdir -p ../dist_artifacts/packages/frontend
 
-          # Commit if there are changes
+          # Copy necessary files to the temporary directory
+          cp -r packages/frontend/dist ../dist_artifacts/packages/frontend/
+          cp org-node-ui-lite.el ../dist_artifacts/
+          cp README.md ../dist_artifacts/ || true
+          cp LICENSE.md ../dist_artifacts/ || true
+
+      - name: Switch to build branch and deploy
+        run: |
+          # Fetch the build branch if it exists, otherwise create it
+          if git ls-remote --exit-code --heads origin build; then
+            git fetch origin build
+            git checkout build
+          else
+            git checkout --orphan build
+            git reset --hard
+          fi
+
+          # Clear the working directory and index
+          git rm -rf . || true
+          git clean -fdx
+
+          # Copy artifacts back
+          cp -r ../dist_artifacts/* ./
+
+          # Add all files to staging
+          git add -A
+
+          # Commit and push if there are changes
           if ! git diff --staged --quiet; then
             git commit -m "chore: build frontend dist [skip ci]"
             git push origin build
