@@ -44,9 +44,7 @@ has been modified to better support org-node. Many thanks to Masaya Taniguchi fo
 ### Manual
 
 ```
-git clone https://github.com/yewton/org-node-ui-lite.git
-cd org-node-ui-lite
-cd packages/frontend && npm install && npm run build && cd ../..
+git clone -b build https://github.com/yewton/org-node-ui-lite.git
 ```
 
 Add to `init.el`:
@@ -65,6 +63,7 @@ Open <http://localhost:5174/index.html>.
 ;; Example with straight.el
 (straight-use-package
  '(org-node-ui-lite :host github :repo "yewton/org-node-ui-lite"
+                    :branch "build"
                     :files ("org-node-ui-lite.el" "packages/frontend/dist")))
 
 (require 'org-node-ui-lite)
