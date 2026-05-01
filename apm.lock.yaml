@@ -4,12 +4,14 @@ dependencies: []
 local_deployed_files:
 - .claude/rules/project-rules.md
 - .claude/rules/typescript.md
+- .claude/skills/apm
 - .claude/skills/e2e
 - .claude/skills/emacs-testing
 - .claude/skills/github-actions
 - .claude/skills/playwright
 - .github/instructions/project-rules.instructions.md
 - .github/instructions/typescript.instructions.md
+- .github/skills/apm
 - .github/skills/e2e
 - .github/skills/emacs-testing
 - .github/skills/github-actions
