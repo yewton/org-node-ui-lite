@@ -20,6 +20,14 @@ jobs:
           python-version: "3.x"
       - run: pip install apm-cli
       - run: apm audit --ci
+      - name: Verify compiled output is up to date
+        run: |
+          apm compile -t gemini,codex
+          if [ -n "$(git status --porcelain -- AGENTS.md GEMINI.md 'packages/frontend/src/AGENTS.md')" ]; then
+            echo "Compiled output is out of date. Run 'apm compile -t gemini,codex' locally and commit the result."
+            git --no-pager diff -- AGENTS.md GEMINI.md packages/frontend/src/AGENTS.md
+            exit 1
+          fi
 
   test:
     runs-on: ubuntu-latest
