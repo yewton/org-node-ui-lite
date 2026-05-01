@@ -21,9 +21,10 @@ description: How to manage agent primitives (skills and instructions) via Agent 
 ```sh
 # 1. Edit or add files under .apm/
 # 2. Re-deploy to all agent directories (targets defined in apm.yml)
-#    --no-policy is required because apm install does not support --policy <path>;
-#    policy is enforced by `apm audit` instead (see CI verification below).
-apm install --no-policy
+#    apm install enforces the org-level policy from <org>/.github/apm-policy.yml
+#    by default. Since this project has no org-level policy, it falls through
+#    silently. The project-level apm-policy.yml is enforced by `apm audit` instead.
+apm install
 
 # 3. Verify policy compliance locally (optional but recommended)
 apm audit --policy ./apm-policy.yml
