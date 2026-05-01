@@ -2,6 +2,11 @@ lockfile_version: '1'
 generated_at: '2026-05-01T07:00:03.015588+00:00'
 dependencies: []
 local_deployed_files:
+- .agents/skills/apm
+- .agents/skills/e2e
+- .agents/skills/emacs-testing
+- .agents/skills/github-actions
+- .agents/skills/playwright
 - .claude/rules/project-rules.md
 - .claude/rules/typescript.md
 - .claude/skills/apm
@@ -9,6 +14,18 @@ local_deployed_files:
 - .claude/skills/emacs-testing
 - .claude/skills/github-actions
 - .claude/skills/playwright
+- .cursor/rules/project-rules.mdc
+- .cursor/rules/typescript.mdc
+- .cursor/skills/apm
+- .cursor/skills/e2e
+- .cursor/skills/emacs-testing
+- .cursor/skills/github-actions
+- .cursor/skills/playwright
+- .gemini/skills/apm
+- .gemini/skills/e2e
+- .gemini/skills/emacs-testing
+- .gemini/skills/github-actions
+- .gemini/skills/playwright
 - .github/instructions/project-rules.instructions.md
 - .github/instructions/typescript.instructions.md
 - .github/skills/apm
@@ -16,8 +33,15 @@ local_deployed_files:
 - .github/skills/emacs-testing
 - .github/skills/github-actions
 - .github/skills/playwright
+- .opencode/skills/apm
+- .opencode/skills/e2e
+- .opencode/skills/emacs-testing
+- .opencode/skills/github-actions
+- .opencode/skills/playwright
 local_deployed_file_hashes:
   .claude/rules/project-rules.md: sha256:85dd5a4d797a1f85f9d1f3c91c690930fed738017ef935a0d45f7e6f4d78e7bd
   .claude/rules/typescript.md: sha256:0866fc20f328f327ff0473e21fdb982471640e856e14586f78a010b399df5e7a
+  .cursor/rules/project-rules.mdc: sha256:e672f90d365123973336cbd260b0f28f808cdcdb7bf4b8e651a16538ea4efd1c
+  .cursor/rules/typescript.mdc: sha256:f0d2fb812a8020b78162d00f26015e703fda736bd4502d667088ce852b5de5fb
   .github/instructions/project-rules.instructions.md: sha256:3aba3c570b80281f7e5aca8c3fa1372bc78ac18a197ccf209afe2345495a3c3c
   .github/instructions/typescript.instructions.md: sha256:336c1cba6ed29f670d447966cee0dda26358bff54123acb21af6dca84e7715d7
