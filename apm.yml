@@ -2,6 +2,13 @@ name: org-node-ui-lite
 version: 1.0.0
 description: Agent primitives for org-node-ui-lite (Emacs Lisp backend + React frontend)
 includes: auto
+target:
+  - claude
+  - copilot
+  - gemini
+  - cursor
+  - opencode
+  - codex
 dependencies:
   apm: []
   mcp: []
