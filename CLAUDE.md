@@ -3,9 +3,6 @@
 <!-- Build ID: __BUILD_ID__ -->
 <!-- APM Version: 0.11.0 -->
 
-# Dependencies
-@apm_modules/vercel-labs/agent-skills/CLAUDE.md
-
 # Project Standards
 
 ## Files matching `**`

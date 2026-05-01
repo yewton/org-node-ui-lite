@@ -20,16 +20,16 @@ jobs:
           python-version: "3.x"
       - run: pip install apm-cli
       - run: apm audit --ci
-      # `apm compile` injects `@apm_modules/...` references into the
-      # compiled CLAUDE.md when external APM dependencies are installed,
-      # so the drift check has to run with apm_modules/ populated to
-      # match how contributors compile locally.
+      # `apm install` populates apm_modules/ so the drift check exercises the
+      # same compile environment contributors have locally. The wrapper script
+      # then stashes paths listed in .apm/compile-stash.txt before invoking
+      # `apm compile` — see issue #47 for why the stash is needed.
       - run: apm install
       - name: Verify compiled output is up to date
         run: |
-          apm compile -t all
+          scripts/apm-compile.sh -t all
           if [ -n "$(git status --porcelain -- CLAUDE.md AGENTS.md GEMINI.md 'packages/frontend/src/CLAUDE.md' 'packages/frontend/src/AGENTS.md')" ]; then
-            echo "Compiled output is out of date. Run 'apm install && apm compile -t all' locally and commit the result."
+            echo "Compiled output is out of date. Run 'apm install && scripts/apm-compile.sh -t all' locally and commit the result."
             git --no-pager diff -- CLAUDE.md AGENTS.md GEMINI.md packages/frontend/src/CLAUDE.md packages/frontend/src/AGENTS.md
             exit 1
           fi
