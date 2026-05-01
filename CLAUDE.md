@@ -105,18 +105,6 @@ const item = MY_MAP["key-a"]; // type: MyType
 Use this pattern for any constant map whose keys are known at compile time
 (fixture data, ID→config tables, etc.).
 
-## General Best Practices & Knowledge
-
-The following generally useful knowledge has been gathered:
-
-- **GitHub Actions (Versioning):** Pin GitHub Actions to their exact SHA-1 commit hashes instead of version tags. You can retain the version tag as a comment.
-- **GitHub Actions (`workflow_run`):** When using `workflow_run` triggered by PRs, context variables point to the default branch. Tools like `actions/checkout` and `dorny/paths-filter` must use explicit `ref` and `base` inputs (e.g., `ref: ${{ github.event.workflow_run.head_branch }}`) to correctly target the PR branch instead of `main`.
-- **Playwright (Browsers):** Do not hardcode `PLAYWRIGHT_BROWSERS_PATH` in `package.json` scripts. This allows local runs to use default cached browsers and avoid slow installations. It should only be explicitly set in CI environments.
-- **Playwright (`global-setup.ts`):** When spawning a background process (like Emacs) from `global-setup.ts`, use `detached: true`, `stdio: "ignore"`, and `process.unref()`. Otherwise, the process may receive `SIGPIPE` and crash when the `globalSetup` Node.js process exits.
-- **Playwright (`webServer` deadlock):** The `webServer` config starts and polls its `url` *before* `globalSetup` runs. Pointing `webServer.url` to an endpoint that depends on a backend started in `globalSetup` will cause a deadlock.
-- **Emacs Testing:** Avoid mocking interactive prompts (like `yes-or-no-p`) for synchronous test execution. Instead, favor approaches like state polling or explicitly loading files.
-- **Agent Environment constraint:** The `run_in_bash_session` tool in this environment blocks scripts containing the literal string 'emacs'. Use Eldev to run Elisp tasks to avoid this restriction.
-
 ## Language
 
 All deliverables must be written in English: commit messages, pull request titles and descriptions, and any other generated text artifacts.
