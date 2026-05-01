@@ -1,6 +1,21 @@
 lockfile_version: '1'
-generated_at: '2026-05-01T07:00:03.015588+00:00'
-dependencies: []
+generated_at: '2026-05-01T10:13:41.931763+00:00'
+apm_version: 0.11.0
+dependencies:
+- repo_url: vercel-labs/agent-skills
+  host: github.com
+  resolved_commit: ce3e64e468f8fa09a2d075d102771838061fdac0
+  virtual_path: skills/react-best-practices
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/react-best-practices
+  - .claude/skills/react-best-practices
+  - .cursor/skills/react-best-practices
+  - .gemini/skills/react-best-practices
+  - .github/skills/react-best-practices
+  - .opencode/skills/react-best-practices
+  content_hash: sha256:74f142d28d360d78e8bac4f239a84c87f0ced9015729bc72b5458d82ff45b015
 local_deployed_files:
 - .agents/skills/apm
 - .agents/skills/e2e
