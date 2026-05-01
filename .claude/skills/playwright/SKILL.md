@@ -1,3 +1,8 @@
+---
+name: playwright-practices
+description: Best practices for Playwright E2E tests. Use when debugging or writing Playwright tests, especially when dealing with global setup or dev servers.
+---
+
 # Playwright Best Practices
 
 - **Browsers Path:** Do not hardcode `PLAYWRIGHT_BROWSERS_PATH` in `package.json` scripts. This allows local runs to use default cached browsers and avoid slow installations. It should only be explicitly set in CI environments.
