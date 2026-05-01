@@ -8,6 +8,7 @@ local_deployed_files:
 - .agents/skills/github-actions
 - .agents/skills/playwright
 - .agents/skills/react-best-practices
+- .claude/rules/apm-policy.md
 - .claude/rules/project-rules.md
 - .claude/rules/typescript.md
 - .claude/skills/apm
@@ -16,6 +17,7 @@ local_deployed_files:
 - .claude/skills/github-actions
 - .claude/skills/playwright
 - .claude/skills/react-best-practices
+- .cursor/rules/apm-policy.mdc
 - .cursor/rules/project-rules.mdc
 - .cursor/rules/typescript.mdc
 - .cursor/skills/apm
@@ -30,6 +32,7 @@ local_deployed_files:
 - .gemini/skills/github-actions
 - .gemini/skills/playwright
 - .gemini/skills/react-best-practices
+- .github/instructions/apm-policy.instructions.md
 - .github/instructions/project-rules.instructions.md
 - .github/instructions/typescript.instructions.md
 - .github/skills/apm
@@ -45,9 +48,12 @@ local_deployed_files:
 - .opencode/skills/playwright
 - .opencode/skills/react-best-practices
 local_deployed_file_hashes:
+  .claude/rules/apm-policy.md: sha256:2df67855765a0abccff62a04817b726cdcc1be43c8cf0ff285fcbb470d0771a2
   .claude/rules/project-rules.md: sha256:85dd5a4d797a1f85f9d1f3c91c690930fed738017ef935a0d45f7e6f4d78e7bd
   .claude/rules/typescript.md: sha256:0866fc20f328f327ff0473e21fdb982471640e856e14586f78a010b399df5e7a
+  .cursor/rules/apm-policy.mdc: sha256:a9d901b67a59794282889b5f3ca0e3ae80820a61de3f9a7d3a7e8e7e4d2421b7
   .cursor/rules/project-rules.mdc: sha256:e672f90d365123973336cbd260b0f28f808cdcdb7bf4b8e651a16538ea4efd1c
   .cursor/rules/typescript.mdc: sha256:f0d2fb812a8020b78162d00f26015e703fda736bd4502d667088ce852b5de5fb
+  .github/instructions/apm-policy.instructions.md: sha256:63418814dc8371b0b8aa71262f5c7da4993054efc1bf83249725756c8cb99cbb
   .github/instructions/project-rules.instructions.md: sha256:3aba3c570b80281f7e5aca8c3fa1372bc78ac18a197ccf209afe2345495a3c3c
   .github/instructions/typescript.instructions.md: sha256:336c1cba6ed29f670d447966cee0dda26358bff54123acb21af6dca84e7715d7

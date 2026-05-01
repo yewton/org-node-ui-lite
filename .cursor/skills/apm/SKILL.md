@@ -21,7 +21,7 @@ description: How to manage agent primitives (skills and instructions) via Agent 
 ```sh
 # 1. Edit or add files under .apm/
 # 2. Re-deploy to all agent directories (targets defined in apm.yml)
-apm install --no-policy
+apm install
 
 # 3. Commit both source and deployed files together
 git add .apm/ .claude/ .github/instructions/ .github/skills/ apm.lock.yaml
