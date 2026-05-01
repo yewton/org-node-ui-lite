@@ -1,13 +1,28 @@
 lockfile_version: '1'
-generated_at: '2026-05-01T07:00:03.015588+00:00'
-dependencies: []
+generated_at: '2026-05-01T11:57:51.893805+00:00'
+apm_version: 0.11.0
+dependencies:
+- repo_url: vercel-labs/agent-skills
+  host: github.com
+  resolved_commit: ce3e64e468f8fa09a2d075d102771838061fdac0
+  resolved_ref: ce3e64e468f8fa09a2d075d102771838061fdac0
+  package_type: skill_bundle
+  deployed_files:
+  - .agents/skills/react-best-practices
+  - .claude/skills/react-best-practices
+  - .cursor/skills/react-best-practices
+  - .gemini/skills/react-best-practices
+  - .github/skills/react-best-practices
+  - .opencode/skills/react-best-practices
+  content_hash: sha256:5dd20e239a6a323bc0ce5b8190ec67e06240fd214ac96332322fd50f52f2ce68
+  skill_subset:
+  - react-best-practices
 local_deployed_files:
 - .agents/skills/apm
 - .agents/skills/e2e
 - .agents/skills/emacs-testing
 - .agents/skills/github-actions
 - .agents/skills/playwright
-- .agents/skills/react-best-practices
 - .claude/rules/project-rules.md
 - .claude/rules/typescript.md
 - .claude/skills/apm
@@ -15,7 +30,6 @@ local_deployed_files:
 - .claude/skills/emacs-testing
 - .claude/skills/github-actions
 - .claude/skills/playwright
-- .claude/skills/react-best-practices
 - .cursor/rules/project-rules.mdc
 - .cursor/rules/typescript.mdc
 - .cursor/skills/apm
@@ -23,13 +37,11 @@ local_deployed_files:
 - .cursor/skills/emacs-testing
 - .cursor/skills/github-actions
 - .cursor/skills/playwright
-- .cursor/skills/react-best-practices
 - .gemini/skills/apm
 - .gemini/skills/e2e
 - .gemini/skills/emacs-testing
 - .gemini/skills/github-actions
 - .gemini/skills/playwright
-- .gemini/skills/react-best-practices
 - .github/instructions/project-rules.instructions.md
 - .github/instructions/typescript.instructions.md
 - .github/skills/apm
@@ -37,13 +49,11 @@ local_deployed_files:
 - .github/skills/emacs-testing
 - .github/skills/github-actions
 - .github/skills/playwright
-- .github/skills/react-best-practices
 - .opencode/skills/apm
 - .opencode/skills/e2e
 - .opencode/skills/emacs-testing
 - .opencode/skills/github-actions
 - .opencode/skills/playwright
-- .opencode/skills/react-best-practices
 local_deployed_file_hashes:
   .claude/rules/project-rules.md: sha256:85dd5a4d797a1f85f9d1f3c91c690930fed738017ef935a0d45f7e6f4d78e7bd
   .claude/rules/typescript.md: sha256:0866fc20f328f327ff0473e21fdb982471640e856e14586f78a010b399df5e7a
