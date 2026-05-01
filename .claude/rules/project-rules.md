@@ -1,0 +1,23 @@
+---
+paths:
+  - "**"
+---
+
+# Project Rules
+
+## Language
+
+All deliverables must be written in English: commit messages, pull request titles
+and descriptions, code comments, and any other generated text artifacts.
+
+## Pre-PR Checklist
+
+Run the full test suite and confirm all checks pass before opening a pull request:
+
+```sh
+eldev --packaged --debug --trace --time compile --warnings-as-errors
+eldev --debug --trace --time test
+npm run lint
+npm run check
+npm test
+```

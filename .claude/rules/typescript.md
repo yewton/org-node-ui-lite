@@ -1,0 +1,28 @@
+---
+paths:
+  - "packages/frontend/src/**/*.{ts,tsx}"
+---
+
+# TypeScript Patterns
+
+`exactOptionalPropertyTypes: true` is enabled. Index-accessing a
+`Record<string, T>` returns `T | undefined`, which triggers the
+`noNonNullAssertion` lint rule if you suppress it with `!`.
+
+Preferred pattern for object literals indexed by known keys:
+
+```typescript
+// Use `satisfies` instead of an explicit type annotation.
+// TypeScript infers the concrete object type so literal-key access returns T,
+// not T | undefined, and no `!` assertion is needed.
+export const MY_MAP = {
+  "key-a": { ... },
+  "key-b": { ... },
+} satisfies Record<string, MyType>;
+
+// Access without `!`:
+const item = MY_MAP["key-a"]; // type: MyType
+```
+
+Use this pattern for any constant map whose keys are known at compile time
+(fixture data, ID→config tables, etc.).

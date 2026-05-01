@@ -1,0 +1,21 @@
+lockfile_version: '1'
+generated_at: '2026-05-01T07:00:03.015588+00:00'
+dependencies: []
+local_deployed_files:
+- .claude/rules/project-rules.md
+- .claude/rules/typescript.md
+- .claude/skills/e2e
+- .claude/skills/emacs-testing
+- .claude/skills/github-actions
+- .claude/skills/playwright
+- .github/instructions/project-rules.instructions.md
+- .github/instructions/typescript.instructions.md
+- .github/skills/e2e
+- .github/skills/emacs-testing
+- .github/skills/github-actions
+- .github/skills/playwright
+local_deployed_file_hashes:
+  .claude/rules/project-rules.md: sha256:85dd5a4d797a1f85f9d1f3c91c690930fed738017ef935a0d45f7e6f4d78e7bd
+  .claude/rules/typescript.md: sha256:0866fc20f328f327ff0473e21fdb982471640e856e14586f78a010b399df5e7a
+  .github/instructions/project-rules.instructions.md: sha256:3aba3c570b80281f7e5aca8c3fa1372bc78ac18a197ccf209afe2345495a3c3c
+  .github/instructions/typescript.instructions.md: sha256:336c1cba6ed29f670d447966cee0dda26358bff54123acb21af6dca84e7715d7
