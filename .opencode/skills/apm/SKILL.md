@@ -21,9 +21,14 @@ description: How to manage agent primitives (skills and instructions) via Agent 
 ```sh
 # 1. Edit or add files under .apm/
 # 2. Re-deploy to all agent directories (targets defined in apm.yml)
+#    --no-policy is required because apm install does not support --policy <path>;
+#    policy is enforced by `apm audit` instead (see CI verification below).
 apm install --no-policy
 
-# 3. Commit both source and deployed files together
+# 3. Verify policy compliance locally (optional but recommended)
+apm audit --policy ./apm-policy.yml
+
+# 4. Commit source, deployed files, and lockfile together
 git add .apm/ .claude/ .github/instructions/ .github/skills/ apm.lock.yaml
 git commit -m "..."
 ```
@@ -50,8 +55,18 @@ applyTo: "glob/pattern/**"   # omit for global (applies everywhere)
 # Instructions ...
 ```
 
+## Policy
+
+`apm-policy.yml` (project root) defines the governance rules enforced by CI:
+
+- **No external APM dependencies** — `dependencies.deny: ["*"]`
+- **No MCP servers** — `mcp.self_defined: deny`
+- **Allowed targets** — claude, copilot, gemini, cursor, opencode, codex
+- **No scripts** — `manifest.scripts: deny`
+
 ## CI verification
 
-`apm audit --ci` (run in the `verify-apm` CI job) checks that all deployed
-files match the lockfile hashes. The PR is blocked if `.apm/` was edited
-without running `apm install`.
+`apm audit --ci --policy ./apm-policy.yml` (run in the `verify-apm` CI job)
+checks that all deployed files match the lockfile hashes and that the project
+conforms to the policy rules. The PR is blocked if `.apm/` was edited without
+running `apm install`.
