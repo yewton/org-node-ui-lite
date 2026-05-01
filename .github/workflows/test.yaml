@@ -22,10 +22,10 @@ jobs:
       - run: apm audit --ci
       - name: Verify compiled output is up to date
         run: |
-          apm compile -t gemini,codex
-          if [ -n "$(git status --porcelain -- AGENTS.md GEMINI.md 'packages/frontend/src/AGENTS.md')" ]; then
-            echo "Compiled output is out of date. Run 'apm compile -t gemini,codex' locally and commit the result."
-            git --no-pager diff -- AGENTS.md GEMINI.md packages/frontend/src/AGENTS.md
+          apm compile -t all
+          if [ -n "$(git status --porcelain -- CLAUDE.md AGENTS.md GEMINI.md 'packages/frontend/src/CLAUDE.md' 'packages/frontend/src/AGENTS.md')" ]; then
+            echo "Compiled output is out of date. Run 'apm compile -t all' locally and commit the result."
+            git --no-pager diff -- CLAUDE.md AGENTS.md GEMINI.md packages/frontend/src/CLAUDE.md packages/frontend/src/AGENTS.md
             exit 1
           fi
 

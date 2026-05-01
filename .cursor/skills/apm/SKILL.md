@@ -17,7 +17,7 @@ directly.
 | `.claude/skills/`, `.claude/rules/` | Deployed by `apm install` — do not edit |
 | `.github/skills/`, `.github/instructions/` | Deployed by `apm install` — do not edit |
 | `.gemini/skills/`, `.cursor/`, `.opencode/`, `.agents/` | Deployed by `apm install` — do not edit |
-| `AGENTS.md`, `GEMINI.md`, `packages/frontend/src/AGENTS.md` | Compiled by `apm compile` — do not edit |
+| `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `packages/frontend/src/{CLAUDE,AGENTS}.md` | Compiled by `apm compile` — do not edit |
 
 ## Two commands, two responsibilities
 
@@ -25,14 +25,12 @@ directly.
 
 - **`apm install`** deploys skills, commands, hooks, and MCP config into
   agent-native directories (`.claude/`, `.github/`, `.gemini/`, …).
-  GitHub Copilot, Claude, Cursor, and OpenCode read these directly.
-- **`apm compile`** rolls instructions up into a single context file per agent
-  for tools that don't read deployed primitives natively. **Gemini and Codex
-  require this step** — without it `GEMINI.md` / `AGENTS.md` go stale and
-  those agents see outdated rules.
-
-`CLAUDE.md` is hand-written project documentation in this repo; we do not
-compile it. Only `gemini` and `codex` are passed to `apm compile`.
+  GitHub Copilot, Cursor, and OpenCode read these directly.
+- **`apm compile`** rolls `.apm/instructions/` up into a single context file
+  per agent. Gemini and Codex *require* this step (`GEMINI.md` / `AGENTS.md`);
+  Claude reads `CLAUDE.md` from compile too. We always compile for **all**
+  targets so `.apm/` remains the single source of truth and every agent sees
+  the same rules.
 
 ## Workflow
 
@@ -41,13 +39,14 @@ compile it. Only `gemini` and `codex` are passed to `apm compile`.
 # 2. Re-deploy native primitives to every target in apm.yml
 apm install
 
-# 3. Re-compile the instruction roll-ups consumed by Gemini and Codex
-apm compile -t gemini,codex
+# 3. Re-compile the instruction roll-ups for every supported agent
+apm compile -t all
 
 # 4. Commit source, deployed files, lockfile, and compiled output together
 git add .apm/ .claude/ .github/instructions/ .github/skills/ \
         .gemini/ .cursor/ .opencode/ .agents/ \
-        AGENTS.md GEMINI.md packages/frontend/src/AGENTS.md \
+        CLAUDE.md AGENTS.md GEMINI.md \
+        packages/frontend/src/CLAUDE.md packages/frontend/src/AGENTS.md \
         apm.lock.yaml
 git commit -m "..."
 ```
@@ -81,10 +80,11 @@ The `verify-apm` job runs two checks and fails the PR if either drifts:
 1. `apm audit --ci` — verifies that deployed files (`.claude/`, `.github/`,
    `.gemini/`, …) match the lockfile hashes. Fails if `.apm/` was edited
    without running `apm install`.
-2. `apm compile -t gemini,codex` followed by `git status --porcelain --
-   AGENTS.md GEMINI.md packages/frontend/src/AGENTS.md` — verifies that the
-   committed compiled output matches the current `.apm/` source. Fails if
-   you edited `.apm/instructions/` without running `apm compile`.
+2. `apm compile -t all` followed by `git status --porcelain` on the compiled
+   files — verifies that the committed `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`,
+   and the scoped `packages/frontend/src/*` companions match the current
+   `.apm/` source. Fails if you edited `.apm/instructions/` without running
+   `apm compile`.
 
 ## Policy
 
