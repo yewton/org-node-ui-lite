@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { DetailsPanel } from "./components/DetailsPanel.tsx";
 import { GraphContainer } from "./components/GraphContainer.tsx";
 import { GraphControls } from "./components/GraphControls.tsx";
@@ -63,44 +64,68 @@ function App() {
 		selectedId: selected.id,
 	});
 
-	const handleThemeChange = (t: Theme) => {
-		setTheme(t);
-		dispatch({ type: "SET_STATE", payload: { theme: t } });
-	};
+	const handleThemeChange = useCallback(
+		(t: Theme) => {
+			setTheme(t);
+			dispatch({ type: "SET_STATE", payload: { theme: t } });
+		},
+		[setTheme, dispatch],
+	);
 
-	const handleRendererChange = (r: Renderer) => {
-		setRenderer(r);
-		dispatch({ type: "SET_STATE", payload: { renderer: r } });
-	};
+	const handleRendererChange = useCallback(
+		(r: Renderer) => {
+			void setRenderer(r);
+			dispatch({ type: "SET_STATE", payload: { renderer: r } });
+		},
+		[setRenderer, dispatch],
+	);
 
-	const handleLayoutChange = (l: Layout) => {
-		setLayout(l);
-		dispatch({ type: "SET_STATE", payload: { layout: l } });
-	};
+	const handleLayoutChange = useCallback(
+		(l: Layout) => {
+			void setLayout(l);
+			dispatch({ type: "SET_STATE", payload: { layout: l } });
+		},
+		[setLayout, dispatch],
+	);
 
-	const handleNodeSizeChange = (s: number) => {
-		setNodeSize(s);
-		dispatch({ type: "SET_STATE", payload: { nodeSize: s } });
-	};
+	const handleNodeSizeChange = useCallback(
+		(s: number) => {
+			void setNodeSize(s);
+			dispatch({ type: "SET_STATE", payload: { nodeSize: s } });
+		},
+		[setNodeSize, dispatch],
+	);
 
-	const handleLabelScaleChange = (s: number) => {
-		setLabelScale(s);
-		dispatch({ type: "SET_STATE", payload: { labelScale: s } });
-	};
+	const handleLabelScaleChange = useCallback(
+		(s: number) => {
+			void setLabelScale(s);
+			dispatch({ type: "SET_STATE", payload: { labelScale: s } });
+		},
+		[setLabelScale, dispatch],
+	);
 
-	const handleShowLabelsChange = (s: boolean) => {
-		setShowLabels(s);
-		dispatch({ type: "SET_STATE", payload: { showLabels: s } });
-	};
+	const handleShowLabelsChange = useCallback(
+		(s: boolean) => {
+			void setShowLabels(s);
+			dispatch({ type: "SET_STATE", payload: { showLabels: s } });
+		},
+		[setShowLabels, dispatch],
+	);
 
-	const handleChargeStrengthChange = (s: number) => {
-		setChargeStrength(s);
-		dispatch({ type: "SET_STATE", payload: { chargeStrength: s } });
-	};
+	const handleChargeStrengthChange = useCallback(
+		(s: number) => {
+			void setChargeStrength(s);
+			dispatch({ type: "SET_STATE", payload: { chargeStrength: s } });
+		},
+		[setChargeStrength, dispatch],
+	);
 
-	const handleFollowEmacsChange = (follow: boolean) => {
-		dispatch({ type: "SET_STATE", payload: { followEmacs: follow } });
-	};
+	const handleFollowEmacsChange = useCallback(
+		(follow: boolean) => {
+			dispatch({ type: "SET_STATE", payload: { followEmacs: follow } });
+		},
+		[dispatch],
+	);
 
 	return (
 		<div className="vh-100 vw-100">

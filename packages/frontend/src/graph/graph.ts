@@ -69,8 +69,10 @@ export async function drawGraph(
 	showLabels: boolean,
 	chargeStrength: number,
 ): Promise<GraphInstance> {
-	const { nodes, edges } = await fetchGraphData();
-	const rendererMod = await rendererMap[renderer]();
+	const [{ nodes, edges }, rendererMod] = await Promise.all([
+		fetchGraphData(),
+		rendererMap[renderer](),
+	]);
 
 	return rendererMod.default(
 		nodes,

@@ -34,64 +34,75 @@ export function DetailsPanel({
 	const containerRef = useRef<HTMLElement>(null);
 	const previewComponentRef = useRef<HTMLDivElement>(null);
 
-	const handleRenderedOnClick = (ev: React.MouseEvent<HTMLElement>) => {
-		const target = ev.target as HTMLElement;
-
-		// Check if clicked on MathJax formula
-		const mjxContainer = target.closest("mjx-container");
-		if (mjxContainer) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			setTheaterMath(mjxContainer.outerHTML);
-			return;
-		}
-
-		// Check for links
-		const a = target.closest("a");
-		if (!a || !a.href.startsWith("id:")) return;
-		ev.preventDefault();
-		onOpenNode(a.href.replace("id:", ""));
-	};
-
-	const handleRenderedMouseOver = (
-		ev: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>,
-	) => {
-		const anchor = (ev.target as HTMLElement).closest("a");
-		if (!anchor || !anchor.href.startsWith("id:")) return;
-		if (previewAnchorRef.current === anchor) return;
-		showPreview(anchor, ev as React.MouseEvent<HTMLElement>);
-	};
-
-	const handleRenderedMouseOut = (
-		ev: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>,
-	) => {
-		if (!previewAnchorRef.current) return;
-		const related = ev.relatedTarget as Node | null;
-		if (
-			related &&
-			(previewAnchorRef.current.contains(related) ||
-				previewComponentRef.current?.contains(related))
-		) {
-			return;
-		}
-		hidePreview();
-	};
-
-	const showPreview = async (
-		anchor: HTMLAnchorElement,
-		ev: React.MouseEvent<HTMLElement>,
-	) => {
-		previewAnchorRef.current = anchor;
-		const node = await openNode(theme, anchor.href.replace("id:", ""));
-		if (previewAnchorRef.current === anchor) {
-			setPreview({ body: node.body, x: ev.clientX, y: ev.clientY });
-		}
-	};
-
 	const hidePreview = useCallback(() => {
 		setPreview(null);
 		previewAnchorRef.current = null;
 	}, []);
+
+	const showPreview = useCallback(
+		async (anchor: HTMLAnchorElement, ev: React.MouseEvent<HTMLElement>) => {
+			previewAnchorRef.current = anchor;
+			const node = await openNode(theme, anchor.href.replace("id:", ""));
+			if (previewAnchorRef.current === anchor) {
+				setPreview({ body: node.body, x: ev.clientX, y: ev.clientY });
+			}
+		},
+		[theme],
+	);
+
+	const handleRenderedOnClick = useCallback(
+		(ev: React.MouseEvent<HTMLElement>) => {
+			const target = ev.target as HTMLElement;
+
+			// Check if clicked on MathJax formula
+			const mjxContainer = target.closest("mjx-container");
+			if (mjxContainer) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				setTheaterMath(mjxContainer.outerHTML);
+				return;
+			}
+
+			// Check for links
+			const a = target.closest("a");
+			if (!a || !a.href.startsWith("id:")) return;
+			ev.preventDefault();
+			onOpenNode(a.href.replace("id:", ""));
+		},
+		[onOpenNode],
+	);
+
+	const handleRenderedMouseOver = useCallback(
+		(ev: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>) => {
+			const anchor = (ev.target as HTMLElement).closest("a");
+			if (!anchor || !anchor.href.startsWith("id:")) return;
+			if (previewAnchorRef.current === anchor) return;
+			void showPreview(anchor, ev as React.MouseEvent<HTMLElement>);
+		},
+		[showPreview],
+	);
+
+	const handleRenderedMouseOut = useCallback(
+		(ev: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>) => {
+			if (!previewAnchorRef.current) return;
+			const related = ev.relatedTarget as Node | null;
+			if (
+				related &&
+				(previewAnchorRef.current.contains(related) ||
+					previewComponentRef.current?.contains(related))
+			) {
+				return;
+			}
+			hidePreview();
+		},
+		[hidePreview],
+	);
+
+	const handleClose = useCallback(() => {
+		hidePreview();
+		setTheaterMath(null);
+		onClose();
+	}, [hidePreview, onClose]);
 
 	const panelId = useId();
 	const labelId = useId();
@@ -99,12 +110,6 @@ export function DetailsPanel({
 	if (!open) {
 		return null;
 	}
-
-	const handleClose = () => {
-		hidePreview();
-		setTheaterMath(null);
-		onClose();
-	};
 
 	return (
 		<>

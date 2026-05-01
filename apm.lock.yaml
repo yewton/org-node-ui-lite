@@ -7,6 +7,7 @@ local_deployed_files:
 - .agents/skills/emacs-testing
 - .agents/skills/github-actions
 - .agents/skills/playwright
+- .agents/skills/react-best-practices
 - .claude/rules/project-rules.md
 - .claude/rules/typescript.md
 - .claude/skills/apm
@@ -14,6 +15,7 @@ local_deployed_files:
 - .claude/skills/emacs-testing
 - .claude/skills/github-actions
 - .claude/skills/playwright
+- .claude/skills/react-best-practices
 - .cursor/rules/project-rules.mdc
 - .cursor/rules/typescript.mdc
 - .cursor/skills/apm
@@ -21,11 +23,13 @@ local_deployed_files:
 - .cursor/skills/emacs-testing
 - .cursor/skills/github-actions
 - .cursor/skills/playwright
+- .cursor/skills/react-best-practices
 - .gemini/skills/apm
 - .gemini/skills/e2e
 - .gemini/skills/emacs-testing
 - .gemini/skills/github-actions
 - .gemini/skills/playwright
+- .gemini/skills/react-best-practices
 - .github/instructions/project-rules.instructions.md
 - .github/instructions/typescript.instructions.md
 - .github/skills/apm
@@ -33,11 +37,13 @@ local_deployed_files:
 - .github/skills/emacs-testing
 - .github/skills/github-actions
 - .github/skills/playwright
+- .github/skills/react-best-practices
 - .opencode/skills/apm
 - .opencode/skills/e2e
 - .opencode/skills/emacs-testing
 - .opencode/skills/github-actions
 - .opencode/skills/playwright
+- .opencode/skills/react-best-practices
 local_deployed_file_hashes:
   .claude/rules/project-rules.md: sha256:85dd5a4d797a1f85f9d1f3c91c690930fed738017ef935a0d45f7e6f4d78e7bd
   .claude/rules/typescript.md: sha256:0866fc20f328f327ff0473e21fdb982471640e856e14586f78a010b399df5e7a

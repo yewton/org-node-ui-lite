@@ -13,13 +13,11 @@ type Detect = {
 	languages: string[];
 };
 
-/**
- * Inspect the Org string and determine which processors are needed.
- *
- * @param orgContent - Org source text
- * @returns Flags indicating required plugins
- */
+const MERMAID_RE = /#\+begin_src\s+mermaid/i;
+const MATH_RE = /\$[^\n$]+\$|\\\(|\\\[/m;
+
 function detect(orgContent: string): Detect {
+	// /g regex with exec() must be created locally — lastIndex is stateful
 	const languageRegex = /^#\+begin_src\s+(\S+)/gm;
 	const languages = new Set<string>();
 	let match = languageRegex.exec(orgContent);
@@ -31,8 +29,8 @@ function detect(orgContent: string): Detect {
 	}
 
 	return {
-		mermaid: /#\+begin_src\s+mermaid/i.test(orgContent),
-		math: /\$[^\n$]+\$|\\\(|\\\[/m.test(orgContent),
+		mermaid: MERMAID_RE.test(orgContent),
+		math: MATH_RE.test(orgContent),
 		languages: [...languages],
 	};
 }
@@ -51,10 +49,11 @@ export function createOrgHtmlProcessor<Theme extends string>(
 	nodeId: string,
 ): Process {
 	return async (orgContent: string) => {
-		const { default: rehypeImgSrcFix } = await import(
-			"./rehype-img-src-fix.ts"
-		);
-		const { default: rehypeClassNames } = await import("rehype-class-names");
+		const [{ default: rehypeImgSrcFix }, { default: rehypeClassNames }] =
+			await Promise.all([
+				import("./rehype-img-src-fix.ts"),
+				import("rehype-class-names"),
+			]);
 
 		const detected = detect(orgContent);
 
@@ -79,11 +78,15 @@ export function createOrgHtmlProcessor<Theme extends string>(
 		}
 
 		if (detected.languages.length > 0) {
-			const { transformerCopyButton } = await import(
-				"@rehype-pretty/transformers"
-			);
-			const { default: rehypePrettyCode } = await import("rehype-pretty-code");
-			const { getSingletonHighlighter } = await import("shiki");
+			const [
+				{ transformerCopyButton },
+				{ default: rehypePrettyCode },
+				{ getSingletonHighlighter },
+			] = await Promise.all([
+				import("@rehype-pretty/transformers"),
+				import("rehype-pretty-code"),
+				import("shiki"),
+			]);
 			const highlighter = await getSingletonHighlighter({
 				themes: [theme.endsWith("dark") ? "vitesse-dark" : "vitesse-light"],
 			});
