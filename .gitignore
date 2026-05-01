@@ -151,3 +151,7 @@ test-results/
 
 # e2e testing artifacts
 e2e/.org-id-locations
+
+
+# APM dependencies
+apm_modules/
