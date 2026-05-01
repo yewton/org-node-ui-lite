@@ -21,9 +21,9 @@ description: How to manage agent primitives (skills and instructions) via Agent 
 ```sh
 # 1. Edit or add files under .apm/
 # 2. Re-deploy to all agent directories (targets defined in apm.yml)
-apm install --no-policy
+apm install
 
-# 3. Commit both source and deployed files together
+# 3. Commit source, deployed files, and lockfile together
 git add .apm/ .claude/ .github/instructions/ .github/skills/ apm.lock.yaml
 git commit -m "..."
 ```
@@ -55,3 +55,8 @@ applyTo: "glob/pattern/**"   # omit for global (applies everywhere)
 `apm audit --ci` (run in the `verify-apm` CI job) checks that all deployed
 files match the lockfile hashes. The PR is blocked if `.apm/` was edited
 without running `apm install`.
+
+## Policy
+
+APM supports org-level governance via `apm-policy.yml`, but this is an
+enterprise feature for multi-team organizations. This project does not use it.

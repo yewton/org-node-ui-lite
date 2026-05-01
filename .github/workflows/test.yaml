@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.x"
       - run: pip install apm-cli
-      - run: apm audit --ci --no-policy
+      - run: apm audit --ci
 
   test:
     runs-on: ubuntu-latest
