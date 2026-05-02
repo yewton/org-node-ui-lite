@@ -43,8 +43,9 @@ apm install
 
 # 3. Compile the instruction roll-ups for every supported agent.
 #    Always invoke the wrapper, not `apm compile` directly — see
-#    "Why scripts/apm-compile.sh" below.
-scripts/apm-compile.sh -t all
+#    "Why the apm-compile wrapper" below. The wrapper is bundled with
+#    this skill so `apm install` keeps it deployed alongside the docs.
+.apm/skills/apm/scripts/apm-compile.sh -t all
 
 # 4. Commit source, deployed files, lockfile, and compiled output together
 git add .apm/ .claude/ .github/instructions/ .github/skills/ \
@@ -55,7 +56,7 @@ git add .apm/ .claude/ .github/instructions/ .github/skills/ \
 git commit -m "..."
 ```
 
-### Why `scripts/apm-compile.sh`
+### Why the apm-compile wrapper
 
 APM's Claude formatter auto-injects an
 `@apm_modules/<owner>/<package>/CLAUDE.md` import into the project's
@@ -65,11 +66,17 @@ compiled `CLAUDE.md` for every populated dependency, regardless of
 pulls upstream "how to author a skill in *that* repo" docs into our
 agents' context.
 
-`scripts/apm-compile.sh` reads `.apm/compile-stash.txt`, moves the paths
-listed there aside, runs `apm compile`, and restores them on exit (even
-on failure, via a `trap`). Add a new line to `.apm/compile-stash.txt`
-whenever a newly installed dep ships a `CLAUDE.md` we don't want
-embedded.
+The bundled `scripts/apm-compile.sh` reads `.apm/compile-stash.txt`,
+moves the paths listed there aside, runs `apm compile`, and restores
+them on exit (even on failure, via a `trap`). Add a new line to
+`.apm/compile-stash.txt` whenever a newly installed dep ships a
+`CLAUDE.md` we don't want embedded.
+
+The script lives at `.apm/skills/apm/scripts/apm-compile.sh`. `apm
+install` deploys copies into `.claude/skills/apm/scripts/`,
+`.gemini/skills/apm/scripts/`, etc. — invoke whichever path your tools
+make convenient; all copies use `git rev-parse --show-toplevel` to find
+`.apm/compile-stash.txt`.
 
 Tracked in issue #47 (with removal criteria). Upstream bug:
 microsoft/apm#1047.
@@ -103,7 +110,7 @@ The `verify-apm` job runs two checks and fails the PR if either drifts:
 1. `apm audit --ci` — verifies that deployed files (`.claude/`, `.github/`,
    `.gemini/`, …) match the lockfile hashes. Fails if `.apm/` was edited
    without running `apm install`.
-2. `scripts/apm-compile.sh -t all` followed by `git status --porcelain` on
+2. `.apm/skills/apm/scripts/apm-compile.sh -t all` followed by `git status --porcelain` on
    the compiled files — verifies that the committed `CLAUDE.md`,
    `AGENTS.md`, `GEMINI.md`, and the scoped `packages/frontend/src/*`
    companions match the current `.apm/` source. Fails if you edited

@@ -27,9 +27,9 @@ jobs:
       - run: apm install
       - name: Verify compiled output is up to date
         run: |
-          scripts/apm-compile.sh -t all
+          .apm/skills/apm/scripts/apm-compile.sh -t all
           if [ -n "$(git status --porcelain -- CLAUDE.md AGENTS.md GEMINI.md 'packages/frontend/src/CLAUDE.md' 'packages/frontend/src/AGENTS.md')" ]; then
-            echo "Compiled output is out of date. Run 'apm install && scripts/apm-compile.sh -t all' locally and commit the result."
+            echo "Compiled output is out of date. Run 'apm install && .apm/skills/apm/scripts/apm-compile.sh -t all' locally and commit the result."
             git --no-pager diff -- CLAUDE.md AGENTS.md GEMINI.md packages/frontend/src/CLAUDE.md packages/frontend/src/AGENTS.md
             exit 1
           fi
