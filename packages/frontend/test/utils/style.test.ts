@@ -3,6 +3,7 @@ import {
 	alphaColor,
 	getCssVariable,
 	pickColor,
+	resolveAccentColors,
 } from "../../src/utils/style.ts";
 
 describe("getCssVariable", () => {
@@ -87,6 +88,71 @@ describe("pickColor", () => {
 			expect(color).toBeTruthy();
 			expect(color.startsWith("#")).toBe(true);
 		});
+	});
+
+	test("uses pre-resolved colors array when provided", () => {
+		const preResolved = [
+			"red",
+			"green",
+			"blue",
+			"cyan",
+			"magenta",
+			"yellow",
+			"white",
+			"black",
+			"gray",
+			"orange",
+		];
+		const color = pickColor("test", preResolved);
+		expect(preResolved).toContain(color);
+	});
+
+	test("pre-resolved array produces same index as default path", () => {
+		const preResolved = resolveAccentColors();
+		const colorFromCache = pickColor("node-123", preResolved);
+		const colorFromDefault = pickColor("node-123");
+		expect(colorFromCache).toBe(colorFromDefault);
+	});
+});
+
+describe("resolveAccentColors", () => {
+	beforeEach(() => {
+		const mockGetComputedStyle = vi.fn(() => ({
+			getPropertyValue: vi.fn((prop: string) => {
+				const values: Record<string, string> = {
+					"--bs-blue": "#0d6efd",
+					"--bs-indigo": "#6610f2",
+					"--bs-purple": "#6f42c1",
+					"--bs-pink": "#d63384",
+					"--bs-red": "#dc3545",
+					"--bs-orange": "#fd7e14",
+					"--bs-yellow": "#ffc107",
+					"--bs-green": "#198754",
+					"--bs-teal": "#20c997",
+					"--bs-cyan": "#0dcaf0",
+				};
+				return values[prop] || "";
+			}),
+		}));
+		vi.stubGlobal("getComputedStyle", mockGetComputedStyle);
+	});
+
+	test("returns an array with one entry per accent variable", () => {
+		const colors = resolveAccentColors();
+		expect(colors).toHaveLength(10);
+	});
+
+	test("resolves each accent variable to its CSS value", () => {
+		const colors = resolveAccentColors();
+		expect(colors[0]).toBe("#0d6efd");
+		expect(colors[4]).toBe("#dc3545");
+		expect(colors[9]).toBe("#0dcaf0");
+	});
+
+	test("returns consistent results on repeated calls", () => {
+		const first = resolveAccentColors();
+		const second = resolveAccentColors();
+		expect(first).toEqual(second);
 	});
 });
 

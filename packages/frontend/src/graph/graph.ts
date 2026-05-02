@@ -1,6 +1,10 @@
 import createClient from "openapi-fetch";
 import type { paths } from "../api/api.d.ts";
-import { getCssVariable, pickColor } from "../utils/style.ts";
+import {
+	getCssVariable,
+	pickColor,
+	resolveAccentColors,
+} from "../utils/style.ts";
 import type {
 	GraphInstance,
 	GraphLink,
@@ -29,10 +33,11 @@ async function fetchGraphData(): Promise<GraphData> {
 	if (error || !data)
 		throw new Error(`API error: ${error || "No data received"}`);
 
+	const accentColors = resolveAccentColors();
 	const nodes: GraphNode[] = data.nodes.map((n) => ({
 		id: n.id,
 		label: n.title,
-		color: pickColor(n.id),
+		color: pickColor(n.id, accentColors),
 	}));
 	const nodeIds = new Set(data.nodes.map((n) => n.id));
 	const edgeColor = getCssVariable("--bs-secondary");
