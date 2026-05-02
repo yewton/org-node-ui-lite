@@ -45,7 +45,9 @@ apm install
 #    Always invoke the wrapper, not `apm compile` directly — see
 #    "Why the apm-compile wrapper" below. The wrapper is bundled with
 #    this skill so `apm install` keeps it deployed alongside the docs.
-.apm/skills/apm/scripts/apm-compile.sh -t all
+#    `--stash-list` points at this project's stash list; the path is
+#    project-specific and lives outside the skill on purpose.
+.apm/skills/apm/scripts/apm-compile.sh --stash-list apm-compile-stash.txt -t all
 
 # 4. Commit source, deployed files, lockfile, and compiled output together
 git add .apm/ .claude/ .github/instructions/ .github/skills/ \
@@ -66,17 +68,24 @@ compiled `CLAUDE.md` for every populated dependency, regardless of
 pulls upstream "how to author a skill in *that* repo" docs into our
 agents' context.
 
-The bundled `scripts/apm-compile.sh` reads `.apm/compile-stash.txt`,
-moves the paths listed there aside, runs `apm compile`, and restores
-them on exit (even on failure, via a `trap`). Add a new line to
-`.apm/compile-stash.txt` whenever a newly installed dep ships a
-`CLAUDE.md` we don't want embedded.
+The bundled `scripts/apm-compile.sh` accepts `--stash-list PATH`. PATH
+points to a project-specific file with one path per line (relative to
+the repo root); each listed file or directory is moved aside before
+`apm compile` runs and restored on exit (even on failure, via a
+`trap`). Comments (`#`) and blank lines are allowed.
 
-The script lives at `.apm/skills/apm/scripts/apm-compile.sh`. `apm
-install` deploys copies into `.claude/skills/apm/scripts/`,
+In this project the stash list lives at the repo root in
+`apm-compile-stash.txt`. The list is project-specific configuration —
+contents differ per consumer of this skill — so it's deliberately
+*not* part of the skill bundle. Other projects using this skill
+supply their own list (or omit `--stash-list` entirely; the wrapper
+then passes through to `apm compile` unchanged).
+
+The canonical script source is `.apm/skills/apm/scripts/apm-compile.sh`.
+`apm install` deploys copies into `.claude/skills/apm/scripts/`,
 `.gemini/skills/apm/scripts/`, etc. — invoke whichever path your tools
-make convenient; all copies use `git rev-parse --show-toplevel` to find
-`.apm/compile-stash.txt`.
+make convenient; all copies use `git rev-parse --show-toplevel` to
+resolve repo-root-relative paths from the stash list.
 
 Tracked in issue #47 (with removal criteria). Upstream bug:
 microsoft/apm#1047.
@@ -110,11 +119,12 @@ The `verify-apm` job runs two checks and fails the PR if either drifts:
 1. `apm audit --ci` — verifies that deployed files (`.claude/`, `.github/`,
    `.gemini/`, …) match the lockfile hashes. Fails if `.apm/` was edited
    without running `apm install`.
-2. `.apm/skills/apm/scripts/apm-compile.sh -t all` followed by `git status --porcelain` on
-   the compiled files — verifies that the committed `CLAUDE.md`,
-   `AGENTS.md`, `GEMINI.md`, and the scoped `packages/frontend/src/*`
-   companions match the current `.apm/` source. Fails if you edited
-   `.apm/instructions/` without re-running the compile wrapper.
+2. `.apm/skills/apm/scripts/apm-compile.sh --stash-list apm-compile-stash.txt -t all`
+   followed by `git status --porcelain` on the compiled files —
+   verifies that the committed `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`,
+   and the scoped `packages/frontend/src/*` companions match the
+   current `.apm/` source. Fails if you edited `.apm/instructions/`
+   without re-running the compile wrapper.
 
 ## Policy
 

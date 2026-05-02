@@ -1,22 +1,73 @@
 #!/usr/bin/env bash
-# Wrapper around `apm compile` that moves paths listed in
-# .apm/compile-stash.txt out of the working tree, runs the compile,
-# then restores them — even on failure, via a `trap`.
+# Wrapper around `apm compile` that optionally stashes paths from a
+# project-supplied list before running, restoring them on exit (even
+# on failure, via a `trap`).
 #
-# Use this everywhere (locally, by agents, and in CI) instead of calling
-# `apm compile` directly so the compile drift check stays stable.
+# With --stash-list PATH:
+#   PATH points to a file containing one entry per line. Each entry is
+#   a path relative to the repository root; `#` introduces a comment;
+#   blank lines are ignored. Listed files / directories are moved out
+#   of the working tree before `apm compile` runs and restored after.
+#   Entries that don't resolve to anything on disk produce a warning
+#   (so a contributor who forgot to run `apm install`, or whose stash
+#   list has gone stale, gets a useful hint) but are otherwise skipped.
 #
-# See issue #47 for the rationale and removal criteria.
+# Without --stash-list:
+#   The script is a thin pass-through to `apm compile`.
 #
-# Usage: scripts/apm-compile.sh [apm-compile-args...]
-#   e.g. scripts/apm-compile.sh -t all
+# Remaining args are forwarded to `apm compile`. Use `--` to mark the
+# end of wrapper options if any compile arg might collide with one.
+#
+# This wrapper exists because APM's claude_formatter unconditionally
+# emits `@apm_modules/<owner>/<package>/CLAUDE.md` imports for every
+# populated dependency, regardless of `compilation.exclude`. The skill
+# this script ships with documents the bug and removal criteria — see
+# the SKILL.md alongside it.
 
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-STASH_LIST="${REPO_ROOT}/.apm/compile-stash.txt"
-STASH_DIR="$(mktemp -d)"
+usage() {
+	cat >&2 <<-EOF
+		Usage: $(basename "$0") [--stash-list PATH] [-- apm-compile-args...]
+		       $(basename "$0") --help
+	EOF
+}
 
+STASH_LIST=""
+declare -a COMPILE_ARGS=()
+
+while (( $# > 0 )); do
+	case "$1" in
+		--stash-list)
+			if [[ $# -lt 2 ]]; then
+				usage
+				exit 1
+			fi
+			STASH_LIST="$2"
+			shift 2
+			;;
+		--stash-list=*)
+			STASH_LIST="${1#--stash-list=}"
+			shift
+			;;
+		-h|--help)
+			usage
+			exit 0
+			;;
+		--)
+			shift
+			COMPILE_ARGS+=("$@")
+			break
+			;;
+		*)
+			COMPILE_ARGS+=("$1")
+			shift
+			;;
+	esac
+done
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+STASH_DIR="$(mktemp -d)"
 declare -a STASHED=()
 
 restore() {
@@ -33,7 +84,11 @@ restore() {
 }
 trap restore EXIT
 
-if [[ -f "${STASH_LIST}" ]]; then
+if [[ -n "${STASH_LIST}" ]]; then
+	if [[ ! -f "${STASH_LIST}" ]]; then
+		echo "error: stash list '${STASH_LIST}' not found" >&2
+		exit 1
+	fi
 	while IFS= read -r line || [[ -n "${line}" ]]; do
 		# Strip comments and surrounding whitespace.
 		line="${line%%#*}"
@@ -50,4 +105,4 @@ if [[ -f "${STASH_LIST}" ]]; then
 	done < "${STASH_LIST}"
 fi
 
-apm compile "$@"
+apm compile "${COMPILE_ARGS[@]}"
