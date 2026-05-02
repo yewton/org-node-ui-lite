@@ -32,6 +32,7 @@ vi.mock("openapi-fetch", () => ({
 vi.mock("../../src/utils/style.ts", () => ({
 	getCssVariable: vi.fn(() => "#cccccc"),
 	pickColor: vi.fn((id: string) => `#color-${id}`),
+	resolveAccentColors: vi.fn(() => ["#cccccc"]),
 }));
 
 const mockForceGraphRenderer = vi.fn();

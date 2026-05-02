@@ -28,18 +28,31 @@ const ACCENT_VARIABLES = [
 ] as const;
 
 /**
+ * Resolve all accent CSS variables to their current values in one pass.
+ *
+ * @returns Array of resolved color strings, one per ACCENT_VARIABLES entry
+ */
+export function resolveAccentColors(): string[] {
+	return ACCENT_VARIABLES.map((v) => getCssVariable(v));
+}
+
+/**
  * Deterministically pick a color based on a string key.
  *
+ * Pass a pre-resolved array from {@link resolveAccentColors} to avoid a DOM
+ * query per call when coloring many nodes.
+ *
  * @param key - String used for color selection
- * @returns CSS variable value
+ * @param resolvedColors - Optional pre-resolved accent colors
+ * @returns CSS color value
  */
-export function pickColor(key: string): string {
+export function pickColor(key: string, resolvedColors?: string[]): string {
 	let sum = 0;
 	for (const ch of key) {
 		sum = (sum + ch.charCodeAt(0)) % ACCENT_VARIABLES.length;
 	}
-	const variable = ACCENT_VARIABLES[sum];
-	return getCssVariable(variable || ACCENT_VARIABLES[0] || "--bs-primary");
+	const colors = resolvedColors ?? resolveAccentColors();
+	return colors[sum] ?? colors[0] ?? "";
 }
 
 /**
