@@ -1,0 +1,19 @@
+# Paths (relative to repo root) to move aside before `apm compile` runs,
+# and restore afterwards. Listed because APM's claude_formatter unconditionally
+# emits an `@apm_modules/<owner>/<package>/CLAUDE.md` import into the
+# compiled CLAUDE.md for every populated dep, regardless of
+# `compilation.exclude` — and our deps ship contributor-facing CLAUDE.md
+# files we don't want pulled into this project's agent context.
+#
+# See issue #47 (org-node-ui-lite) and microsoft/apm#1047 for tracking.
+# `#` starts a line comment. Blank lines are ignored.
+
+# `vercel-labs/agent-skills` is a monorepo of skills; its top-level
+# CLAUDE.md is "how to author skills for *that* monorepo" — meaningless
+# in a project that just consumes the `react-best-practices` skill.
+#
+# We stash the whole package directory rather than just `CLAUDE.md`
+# because APM's `_collect_dependencies()` checks for `package_dir.is_dir()`
+# and emits the `@-import` whenever the directory exists, regardless of
+# what's inside it.
+apm_modules/vercel-labs/agent-skills
