@@ -44,6 +44,8 @@ if [[ -f "${STASH_LIST}" ]]; then
 			mkdir -p "${STASH_DIR}/$(dirname "${line}")"
 			mv "${REPO_ROOT}/${line}" "${STASH_DIR}/${line}"
 			STASHED+=("${line}")
+		else
+			echo "warning: stash entry '${line}' did not match any path in the working tree (skipped). Run 'apm install' first if the dependency just isn't installed yet; otherwise remove the entry from ${STASH_LIST}." >&2
 		fi
 	done < "${STASH_LIST}"
 fi
