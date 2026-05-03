@@ -44,6 +44,8 @@ describe("useGraphManager Hook", () => {
 		labelScale: 1,
 		showLabels: true,
 		chargeStrength: -120,
+		linkDistance: 30,
+		collisionRadius: 0,
 	};
 
 	beforeEach(async () => {

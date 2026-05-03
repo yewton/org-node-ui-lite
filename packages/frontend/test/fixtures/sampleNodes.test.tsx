@@ -176,6 +176,8 @@ describe("Graph module with 30-node dataset", () => {
 			0.5,
 			true,
 			-120,
+			30,
+			0,
 		);
 
 		const nodesArg = mockForceGraphRenderer.mock.calls[0]?.[0] as unknown[];
@@ -193,6 +195,8 @@ describe("Graph module with 30-node dataset", () => {
 			0.5,
 			true,
 			-120,
+			30,
+			0,
 		);
 
 		const nodesArg = mockForceGraphRenderer.mock.calls[0]?.[0] as Array<{
@@ -218,6 +222,8 @@ describe("Graph module with 30-node dataset", () => {
 			0.5,
 			true,
 			-120,
+			30,
+			0,
 		);
 
 		const nodesArg = mockForceGraphRenderer.mock.calls[0]?.[0] as Array<{
@@ -243,6 +249,8 @@ describe("Graph module with 30-node dataset", () => {
 			0.5,
 			true,
 			-120,
+			30,
+			0,
 		);
 
 		const edgesArg = mockForceGraphRenderer.mock.calls[0]?.[1] as unknown[];
@@ -260,6 +268,8 @@ describe("Graph module with 30-node dataset", () => {
 			0.5,
 			true,
 			-120,
+			30,
+			0,
 		);
 
 		const edgesArg = mockForceGraphRenderer.mock.calls[0]?.[1] as Array<{
@@ -302,6 +312,8 @@ describe("Graph module with 30-node dataset", () => {
 			0.5,
 			true,
 			-120,
+			30,
+			0,
 		);
 
 		// Two orphan edges must be stripped; only 31 valid ones remain
@@ -320,6 +332,8 @@ describe("Graph module with 30-node dataset", () => {
 			0.5,
 			true,
 			-120,
+			30,
+			0,
 		);
 
 		expect(result).toEqual({ type: "force-graph" });

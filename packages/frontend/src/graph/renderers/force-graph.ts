@@ -1,3 +1,4 @@
+import { forceCollide } from "d3-force";
 import type ForceGraph from "force-graph";
 import ForceGraphCtor from "force-graph";
 import { getCssVariable } from "../../utils/style.ts";
@@ -32,6 +33,8 @@ const renderForceGraph: RendererFunction = (
 	labelScale: number,
 	showLabels: boolean,
 	chargeStrength: number,
+	linkDistance: number,
+	collisionRadius: number,
 ): GraphInstance => {
 	const radius = nodeSize / 2;
 	const area = Math.PI * radius * radius;
@@ -47,6 +50,8 @@ const renderForceGraph: RendererFunction = (
 		.linkColor("color")
 		.linkWidth(2)
 		.d3Force("charge", fg.d3Force("charge")?.strength(chargeStrength) ?? null)
+		.d3Force("link", fg.d3Force("link")?.distance(linkDistance) ?? null)
+		.d3Force("collide", forceCollide(collisionRadius))
 		.graphData({ nodes: fgNodes, links: edges });
 
 	if (showLabels) {

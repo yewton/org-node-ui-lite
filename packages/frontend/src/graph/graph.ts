@@ -73,6 +73,8 @@ export async function drawGraph(
 	labelScale: number,
 	showLabels: boolean,
 	chargeStrength: number,
+	linkDistance: number,
+	collisionRadius: number,
 ): Promise<GraphInstance> {
 	const [{ nodes, edges }, rendererMod] = await Promise.all([
 		fetchGraphData(),
@@ -89,6 +91,8 @@ export async function drawGraph(
 		labelScale,
 		showLabels,
 		chargeStrength,
+		linkDistance,
+		collisionRadius,
 	);
 }
 

@@ -21,6 +21,8 @@ describe("SettingsPanel", () => {
 				labelScale={1}
 				showLabels={true}
 				chargeStrength={-120}
+				linkDistance={30}
+				collisionRadius={0}
 				followEmacs={false}
 				onThemeChange={handleChange}
 				onRendererChange={handleChange}
@@ -29,6 +31,8 @@ describe("SettingsPanel", () => {
 				onLabelScaleChange={handleChange}
 				onShowLabelsChange={handleChange}
 				onChargeStrengthChange={handleChange}
+				onLinkDistanceChange={handleChange}
+				onCollisionRadiusChange={handleChange}
 				onFollowEmacsChange={handleChange}
 				onClose={handleClose}
 			/>,

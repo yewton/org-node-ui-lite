@@ -22,6 +22,8 @@ function App() {
 		labelScale,
 		showLabels,
 		chargeStrength,
+		linkDistance,
+		collisionRadius,
 		followEmacs,
 		settingsOpen,
 		detailsOpen,
@@ -40,6 +42,8 @@ function App() {
 		setLabelScale,
 		setShowLabels,
 		setChargeStrength,
+		setLinkDistance,
+		setCollisionRadius,
 	} = useGraphManager({
 		theme,
 		renderer,
@@ -48,6 +52,8 @@ function App() {
 		labelScale,
 		showLabels,
 		chargeStrength,
+		linkDistance,
+		collisionRadius,
 	});
 
 	useEmacsSync(openNodeAction, followEmacs);
@@ -120,6 +126,22 @@ function App() {
 		[setChargeStrength, dispatch],
 	);
 
+	const handleLinkDistanceChange = useCallback(
+		(d: number) => {
+			void setLinkDistance(d);
+			dispatch({ type: "SET_STATE", payload: { linkDistance: d } });
+		},
+		[setLinkDistance, dispatch],
+	);
+
+	const handleCollisionRadiusChange = useCallback(
+		(r: number) => {
+			void setCollisionRadius(r);
+			dispatch({ type: "SET_STATE", payload: { collisionRadius: r } });
+		},
+		[setCollisionRadius, dispatch],
+	);
+
 	const handleFollowEmacsChange = useCallback(
 		(follow: boolean) => {
 			dispatch({ type: "SET_STATE", payload: { followEmacs: follow } });
@@ -144,6 +166,8 @@ function App() {
 				labelScale={labelScale}
 				showLabels={showLabels}
 				chargeStrength={chargeStrength}
+				linkDistance={linkDistance}
+				collisionRadius={collisionRadius}
 				followEmacs={followEmacs}
 				onThemeChange={handleThemeChange}
 				onRendererChange={handleRendererChange}
@@ -152,6 +176,8 @@ function App() {
 				onLabelScaleChange={handleLabelScaleChange}
 				onShowLabelsChange={handleShowLabelsChange}
 				onChargeStrengthChange={handleChargeStrengthChange}
+				onLinkDistanceChange={handleLinkDistanceChange}
+				onCollisionRadiusChange={handleCollisionRadiusChange}
 				onFollowEmacsChange={handleFollowEmacsChange}
 				onClose={() => dispatch({ type: "TOGGLE_SETTINGS" })}
 			/>

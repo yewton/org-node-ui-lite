@@ -11,6 +11,8 @@ export interface UiState {
 	labelScale: number;
 	showLabels: boolean;
 	chargeStrength: number;
+	linkDistance: number;
+	collisionRadius: number;
 	followEmacs: boolean;
 	settingsOpen: boolean;
 	detailsOpen: boolean;
@@ -35,6 +37,8 @@ export const initialState: UiState = {
 	labelScale: 0.5,
 	showLabels: true,
 	chargeStrength: -120,
+	linkDistance: 30,
+	collisionRadius: 0,
 	followEmacs: false,
 	settingsOpen: false,
 	detailsOpen: false,
@@ -49,6 +53,8 @@ export const persistedKeys: (keyof UiState)[] = [
 	"labelScale",
 	"showLabels",
 	"chargeStrength",
+	"linkDistance",
+	"collisionRadius",
 	"followEmacs",
 ];
 
