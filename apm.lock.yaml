@@ -1,6 +1,6 @@
 lockfile_version: '1'
-generated_at: '2026-05-01T21:18:52.928932+00:00'
-apm_version: 0.11.0
+generated_at: '2026-05-03T22:38:52.456147+00:00'
+apm_version: 0.12.1
 dependencies:
 - repo_url: vercel-labs/agent-skills
   host: github.com
@@ -10,11 +10,7 @@ dependencies:
   deployed_files:
   - .agents/skills/react-best-practices
   - .claude/skills/react-best-practices
-  - .cursor/skills/react-best-practices
-  - .gemini/skills/react-best-practices
-  - .github/skills/react-best-practices
-  - .opencode/skills/react-best-practices
-  content_hash: sha256:5dd20e239a6a323bc0ce5b8190ec67e06240fd214ac96332322fd50f52f2ce68
+  content_hash: sha256:86f6bf734631a025d9e5056346b61a6cfba4d3e05cc20c3f56da75a72599acc4
   skill_subset:
   - react-best-practices
 local_deployed_files:
@@ -34,29 +30,9 @@ local_deployed_files:
 - .cursor/rules/architecture.mdc
 - .cursor/rules/project-rules.mdc
 - .cursor/rules/typescript.mdc
-- .cursor/skills/apm
-- .cursor/skills/e2e
-- .cursor/skills/emacs-testing
-- .cursor/skills/github-actions
-- .cursor/skills/playwright
-- .gemini/skills/apm
-- .gemini/skills/e2e
-- .gemini/skills/emacs-testing
-- .gemini/skills/github-actions
-- .gemini/skills/playwright
 - .github/instructions/architecture.instructions.md
 - .github/instructions/project-rules.instructions.md
 - .github/instructions/typescript.instructions.md
-- .github/skills/apm
-- .github/skills/e2e
-- .github/skills/emacs-testing
-- .github/skills/github-actions
-- .github/skills/playwright
-- .opencode/skills/apm
-- .opencode/skills/e2e
-- .opencode/skills/emacs-testing
-- .opencode/skills/github-actions
-- .opencode/skills/playwright
 local_deployed_file_hashes:
   .claude/rules/architecture.md: sha256:252f4709c82da9de6880232f03ea016453e9371ced7e9a26650f03f9677f00f6
   .claude/rules/project-rules.md: sha256:85dd5a4d797a1f85f9d1f3c91c690930fed738017ef935a0d45f7e6f4d78e7bd
