@@ -70,6 +70,12 @@ jobs:
 
   test-e2e:
     runs-on: ubuntu-latest
+    # Playwright Docker image has all browser deps pre-installed, avoiding
+    # slow apt-get downloads on every run.
+    # Keep this tag in sync with @playwright/test in package.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      options: --user root
     strategy:
       fail-fast: false
       matrix:
@@ -94,29 +100,15 @@ jobs:
             ${{ runner.os }}-eldev-${{ matrix.emacs-version }}-
       # Install eldev dependencies so emacs-server.el can load org-mem / org-node.
       - run: eldev prepare
-      - name: Get Playwright version
-        run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_ENV
-      - name: Cache Playwright browsers
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        id: playwright-cache
-        with:
-          path: /opt/pw-browsers
-          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
-      # Install Chromium to the same path used by the npm test:e2e script.
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
-      - name: Install Playwright dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
       - name: Run E2E tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:
           timeout_minutes: 15
           max_attempts: 3
-          command: npm run test:e2e
+          # Use npx directly instead of `npm run test:e2e` because the npm
+          # script hardcodes PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers, which
+          # conflicts with the Docker image's pre-installed path.
+          command: npx playwright test
 
   check-screenshots:
     runs-on: ubuntu-latest
@@ -139,15 +131,22 @@ jobs:
     needs: [test, test-elisp, test-e2e, check-screenshots]
     if: always() && needs.check-screenshots.outputs.should_run == 'true' && needs.test.result == 'success' && needs.test-elisp.result == 'success' && needs.test-e2e.result == 'success'
     runs-on: ubuntu-latest
+    # Playwright Docker image has all browser deps pre-installed, avoiding
+    # slow apt-get downloads on every run.
+    # Keep this tag in sync with @playwright/test in package.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      options: --user root
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "24"
           cache: npm
-      - uses: jcs090218/setup-emacs@a5b1cbb1af335d2e7bef99c0aa6e02cdad229182 # master
-        with:
-          version: "29.4"
+      # Ubuntu Noble (the Docker image base) ships Emacs 29.4 in the standard
+      # repos, so no need for jcs090218/setup-emacs here.
+      - name: Install Emacs
+        run: apt-get install -y emacs
       - uses: emacs-eldev/setup-eldev@66eef997fb15bde4364c00acd4ee459f8be9f8b4 # v1.5
       - run: npm ci
       - name: Cache Eldev dependencies
@@ -158,23 +157,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-eldev-29.4-
       - run: eldev prepare
-      - name: Get Playwright version
-        run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_ENV
-      - name: Cache Playwright browsers
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        id: playwright-cache
-        with:
-          path: /opt/pw-browsers
-          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
-      - name: Install Playwright dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
-      - run: npm run screenshots
+      # Use npx directly instead of `npm run screenshots` because the npm
+      # script hardcodes PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers, which
+      # conflicts with the Docker image's pre-installed path.
+      - run: npx playwright test --config playwright.screenshots.config.ts
       - name: Upload screenshots artifact
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
