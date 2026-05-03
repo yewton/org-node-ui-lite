@@ -14,6 +14,7 @@
 		"bootstrap": "^5.3.7",
 		"bootstrap-icons": "^1.13.1",
 		"cytoscape": "^3.32.0",
+		"d3-force": "^3.0.0",
 		"force-graph": "^1.50.1",
 		"openapi-fetch": "^0.14.0",
 		"react": "^19.1.1",

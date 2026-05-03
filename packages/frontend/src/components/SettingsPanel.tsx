@@ -22,6 +22,8 @@ interface SettingsPanelProps {
 	labelScale: number;
 	showLabels: boolean;
 	chargeStrength: number;
+	linkDistance: number;
+	collisionRadius: number;
 	followEmacs: boolean;
 	onThemeChange: (theme: Theme) => void;
 	onRendererChange: (renderer: Renderer) => void;
@@ -30,6 +32,8 @@ interface SettingsPanelProps {
 	onLabelScaleChange: (scale: number) => void;
 	onShowLabelsChange: (show: boolean) => void;
 	onChargeStrengthChange: (strength: number) => void;
+	onLinkDistanceChange: (distance: number) => void;
+	onCollisionRadiusChange: (radius: number) => void;
 	onFollowEmacsChange: (follow: boolean) => void;
 	onClose: () => void;
 }
@@ -46,6 +50,8 @@ export function SettingsPanel({
 	labelScale,
 	showLabels,
 	chargeStrength,
+	linkDistance,
+	collisionRadius,
 	followEmacs,
 	onThemeChange,
 	onRendererChange,
@@ -54,6 +60,8 @@ export function SettingsPanel({
 	onLabelScaleChange,
 	onShowLabelsChange,
 	onChargeStrengthChange,
+	onLinkDistanceChange,
+	onCollisionRadiusChange,
 	onFollowEmacsChange,
 	onClose,
 }: SettingsPanelProps) {
@@ -155,6 +163,27 @@ export function SettingsPanel({
 						max={500}
 						step={10}
 						onChange={(v) => onChargeStrengthChange(-v)}
+					/>
+				</When>
+
+				<When condition={renderer === "force-graph"}>
+					<RangeSlider
+						label="Link distance"
+						value={linkDistance}
+						min={20}
+						max={200}
+						step={10}
+						onChange={onLinkDistanceChange}
+						unit="px"
+					/>
+					<RangeSlider
+						label="Collision"
+						value={collisionRadius}
+						min={0}
+						max={50}
+						step={1}
+						onChange={onCollisionRadiusChange}
+						unit="px"
 					/>
 				</When>
 			</div>

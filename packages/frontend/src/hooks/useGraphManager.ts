@@ -23,6 +23,8 @@ interface GraphConfig {
 	labelScale: number;
 	showLabels: boolean;
 	chargeStrength: number;
+	linkDistance: number;
+	collisionRadius: number;
 }
 
 interface UseGraphManagerProps extends GraphConfig {
@@ -40,6 +42,8 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 		labelScale: initialConfig.labelScale,
 		showLabels: initialConfig.showLabels,
 		chargeStrength: initialConfig.chargeStrength,
+		linkDistance: initialConfig.linkDistance,
+		collisionRadius: initialConfig.collisionRadius,
 	});
 	const themeRef = useRef<Theme>(initialConfig.theme);
 
@@ -99,6 +103,8 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 			configRef.current.labelScale,
 			configRef.current.showLabels,
 			configRef.current.chargeStrength,
+			configRef.current.linkDistance,
+			configRef.current.collisionRadius,
 		);
 		bindGraphEvents();
 	}, [bindGraphEvents]);
@@ -189,6 +195,22 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 		[refreshGraph],
 	);
 
+	const setLinkDistance = useCallback(
+		async (linkDistance: number) => {
+			configRef.current = { ...configRef.current, linkDistance };
+			await refreshGraph();
+		},
+		[refreshGraph],
+	);
+
+	const setCollisionRadius = useCallback(
+		async (collisionRadius: number) => {
+			configRef.current = { ...configRef.current, collisionRadius };
+			await refreshGraph();
+		},
+		[refreshGraph],
+	);
+
 	return {
 		graphRef,
 		openNodeAction,
@@ -201,6 +223,8 @@ export function useGraphManager(initialConfig: UseGraphManagerProps) {
 		setLabelScale,
 		setShowLabels,
 		setChargeStrength,
+		setLinkDistance,
+		setCollisionRadius,
 		refreshGraph,
 	};
 }

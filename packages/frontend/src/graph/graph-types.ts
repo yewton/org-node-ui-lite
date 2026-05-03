@@ -57,4 +57,6 @@ export type RendererFunction = (
 	labelScale: number,
 	showLabels: boolean,
 	chargeStrength: number,
+	linkDistance: number,
+	collisionRadius: number,
 ) => GraphInstance;

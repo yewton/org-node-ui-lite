@@ -78,6 +78,8 @@ describe("Graph Module", () => {
 				1,
 				true,
 				-120,
+				30,
+				0,
 			);
 
 			expect(mockGET).toHaveBeenCalledWith("api/graph.json");
@@ -103,6 +105,8 @@ describe("Graph Module", () => {
 				1,
 				true,
 				-120,
+				30,
+				0,
 			);
 		});
 
@@ -126,6 +130,8 @@ describe("Graph Module", () => {
 					1,
 					true,
 					-120,
+					30,
+					0,
 				),
 			).rejects.toThrow("API error: Network error");
 		});
@@ -157,6 +163,8 @@ describe("Graph Module", () => {
 				1.2,
 				false,
 				-120,
+				30,
+				0,
 			);
 
 			expect(mockCytoscapeRenderer).toHaveBeenCalled();
@@ -176,6 +184,8 @@ describe("Graph Module", () => {
 				0.8,
 				true,
 				-120,
+				30,
+				0,
 			);
 
 			expect(mockForceGraphRenderer).toHaveBeenCalled();
@@ -195,6 +205,8 @@ describe("Graph Module", () => {
 				1.5,
 				true,
 				-120,
+				30,
+				0,
 			);
 
 			expect(mock3DForceGraphRenderer).toHaveBeenCalled();
@@ -217,6 +229,8 @@ describe("Graph Module", () => {
 				1,
 				true,
 				-120,
+				30,
+				0,
 			);
 
 			expect(mockCytoscapeRenderer).toHaveBeenCalledWith(
@@ -229,6 +243,8 @@ describe("Graph Module", () => {
 				1,
 				true,
 				-120,
+				30,
+				0,
 			);
 		});
 	});
