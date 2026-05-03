@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-03T22:38:52.456147+00:00'
+generated_at: '2026-05-03T22:49:58.686871+00:00'
 apm_version: 0.12.1
 dependencies:
 - repo_url: vercel-labs/agent-skills
