@@ -70,12 +70,6 @@ jobs:
 
   test-e2e:
     runs-on: ubuntu-latest
-    # Playwright Docker image has all browser deps pre-installed, avoiding
-    # slow apt-get downloads on every run.
-    # Keep this tag in sync with @playwright/test in package.json.
-    container:
-      image: mcr.microsoft.com/playwright:v1.56.1-noble
-      options: --user root
     strategy:
       fail-fast: false
       matrix:
@@ -100,15 +94,29 @@ jobs:
             ${{ runner.os }}-eldev-${{ matrix.emacs-version }}-
       # Install eldev dependencies so emacs-server.el can load org-mem / org-node.
       - run: eldev prepare
+      - name: Get Playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_ENV
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        id: playwright-cache
+        with:
+          path: /opt/pw-browsers
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+      # Install Chromium to the same path used by the npm test:e2e script.
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
+      - name: Install Playwright dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       - name: Run E2E tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:
           timeout_minutes: 15
           max_attempts: 3
-          # Use npx directly instead of `npm run test:e2e` because the npm
-          # script hardcodes PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers, which
-          # conflicts with the Docker image's pre-installed path.
-          command: npx playwright test
+          command: npm run test:e2e
 
   check-screenshots:
     runs-on: ubuntu-latest
