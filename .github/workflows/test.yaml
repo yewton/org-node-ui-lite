@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: "3.x"
-      - run: pip install apm-cli
+      - run: pip install apm-cli==0.12.1
       - run: apm audit --ci
       # `apm install` populates apm_modules/ so the drift check exercises the
       # same compile environment contributors have locally. The wrapper script

@@ -1,6 +1,5 @@
 ---
 description: Project-wide rules for all deliverables. Apply to all files.
-applyTo: "**"
 ---
 
 # Project Rules
